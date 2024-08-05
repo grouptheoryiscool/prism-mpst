@@ -36,6 +36,7 @@ package parser;
 import java.io.*;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import jltl2ba.SimpleLTL;
 import parser.BooleanUtils;
@@ -140,9 +141,13 @@ public class PrismParser
 				System.out.println("LBT: " + sltl.toStringLBT());
 				System.out.println("Spot: " + sltl.toStringSpot());
 				System.out.println("Spin: " + sltl.toStringSpin());
+			} 
+			/*else if (args[0].equals("-sesstype") || args[0].equals("-st")) {
+				Expression probSessType = p.ParseSessionType(str);
+				System.out.println("PST: " + probSessType.toStringPST());
 			} else {
 				System.out.println("Unknown switch"); System.exit(1);
-			}
+			}*/
 		}
 		catch (PrismLangException e) {
 			System.out.println("Error in "+src+": " + e.getMessage()+"."); System.exit(1);
@@ -266,6 +271,26 @@ public class PrismParser
 		}
 		return fl;
 	}
+
+	// Parse Session Type
+	
+	/*public SessType ParseSessionType(InputStream str) throws PrismLangException
+	{
+		sesstype st = null;
+		
+		// (Re)start parser
+		ReInit(str);
+		this.modelInfo = modelInfo;
+		// Parse
+		try {
+			pf = strict ? PropertiesFile() : PropertiesFileSemicolonless();
+		}
+		catch (ParseException e) {
+			throw generateSyntaxError(e);
+		}
+
+		return pf;
+	}*/
 	
 	//-----------------------------------------------------------------------------------
 	// Some utility methods
@@ -531,6 +556,11 @@ TOKEN :
 |	< RENAME:		"<-" >
 |	< QMARK:		"?" >
 |	< DQUOTE:		"\"" >
+	//sess types 
+|	< FLOAT: "float" >
+|	< TYPEEND: "endtype" >
+|	< MU: "nu" >
+|	< DOT: "." >
 	// Regular expressions
 |	< REG_INT:			(["1"-"9"](["0"-"9"])*)|("0") >
 |	< REG_DOUBLE:		(["0"-"9"])*(".")?(["0"-"9"])+(["e","E"](["-","+"])?(["0"-"9"])+)? >
@@ -2091,3 +2121,163 @@ ForLoop ForLoop() :
 }
 
 //------------------------------------------------------------------------------
+// Session Types 
+
+ChannelType channelType() :
+{
+	ChannelType result;
+	String sess, role;
+}
+{
+	sess = Identifier() <LBRACKET> role = Identifier() <RBRACKET>
+	{
+		result = new ChannelType(sess, role);
+		return result;
+	}
+}
+
+TypeEnv typingEnv() : 
+{
+	TypeEnv result = new TypeEnv(new HashMap<ChannelType, ProbSessType>());
+	ChannelType ct;
+	ProbSessType pst;
+}
+{
+	ct = channelType() <COLON> pst = probSessTypeAtom()
+	{ result.addEntry(ct, pst); }
+	(
+		<SEMICOLON> ct = channelType() <COLON> pst = probSessTypeAtom()
+		{ result.addEntry(ct, pst); }
+	)*
+	<EOF>
+	{ return result; }
+}
+
+// ProbSessType prob_sess_type() :
+// {
+//     ProbSessType result;
+// }
+// {
+//     result = probSessTypeAtom() <EOF>
+//     { return result; }
+// }
+
+ProbSessType probSessTypeAtom() :
+{
+    ProbSessType result;
+    ArrayList<SelBranch> branches;
+    ArrayList<RecvBranch> options;
+    String var;
+	RecVar recvar;
+    ProbSessType body;
+	String role;
+}
+{
+    (	
+		LOOKAHEAD(2)
+        role = Identifier() <PLUS> <LBRACE> branches = sess_psel() <RBRACE>
+        { result = new ProbSel(branches, role); }
+    |
+        LOOKAHEAD(2)
+		role = Identifier() <AND> <LBRACE> options = sess_branch() <RBRACE>
+        { result = new Branching(options, role); }
+    |
+        <MU> var = Identifier() <DOT> body = probSessTypeAtom()
+        { recvar = new RecVar(var); result = new RecSessType(recvar, body); }
+    |
+        var = Identifier()
+        { result = new RecVar(var); }
+    |
+        <LPARENTH> result = probSessTypeAtom() <RPARENTH>
+    |
+        <TYPEEND>
+        { result = new TypeEnd(); }
+    )
+    { return result; }
+}
+
+ArrayList<RecvBranch> sess_branch() :
+{
+	ArrayList<RecvBranch> result = new ArrayList<>();
+	String label;
+    MessageType msgType;
+    ProbSessType continuation;
+}
+{
+	<LBRACE> label = Identifier() <LPARENTH> msgType = message_type() <RPARENTH> <DOT> continuation = probSessTypeAtom()
+	{ result.add(new RecvBranch(label, msgType, continuation)); }
+	(
+		<SEMICOLON> label = Identifier() <LPARENTH> msgType = message_type() <RPARENTH> <DOT> continuation = probSessTypeAtom()
+		{ result.add(new RecvBranch(label, msgType, continuation)); }
+	)*
+	<RBRACE>
+	{ return result; }
+}
+
+ArrayList<SelBranch> sess_psel() :
+{
+    ArrayList<SelBranch> result = new ArrayList<>();
+	Expression interval;
+	ExpressionInterval exprInterval;
+    String label;
+    MessageType msgType;
+    ProbSessType continuation;
+}
+{
+    (
+        interval = ExpressionInterval(false, false) <COLON> label = Identifier() 
+        <LPARENTH> msgType = message_type() <RPARENTH> <DOT>
+        continuation = probSessTypeAtom()
+        { exprInterval = (ExpressionInterval)interval; result.add(new SelBranch(exprInterval, label, msgType, continuation)); }
+        (
+            <SEMICOLON>
+            interval = ExpressionInterval(false, false) <COLON> label = Identifier() 
+            <LPARENTH> msgType = message_type() <RPARENTH> <DOT>
+            continuation = probSessTypeAtom()
+            { exprInterval = (ExpressionInterval)interval; result.add(new SelBranch(exprInterval, label, msgType, continuation)); }
+        )*
+    )
+    { return result; }
+}
+
+MessageType message_type() :
+{
+    MessageType result;
+    ProbSessType sessType;
+    BaseType.basictype baseType;
+}
+{
+    (
+        sessType = probSessTypeAtom()
+        { result = sessType; }
+    |
+        baseType = base_type()
+        { result = new BaseType(baseType); }
+    )
+    { return result; }
+}
+
+BaseType.basictype base_type() :
+{
+    BaseType.basictype result;
+}
+{
+    (
+        <INT> { result = BaseType.basictype.INT; }
+    |
+        <BOOL> { result = BaseType.basictype.BOOL; }
+    |
+        <FLOAT> { result = BaseType.basictype.FLOAT; }
+    )
+    { return result; }
+}
+
+// ArrayList<Double> prob_interval() :
+// {
+// 	ArrayList<Double> result = new ArrayList<>();
+// 	ExpressionLiteral lower, upper;
+// }
+// {
+// 	<LBRACKET> lower = ExpressionLiteral(false, false) <COMMA> upper = ExpressionLiteral(false, false) <RBRACKET>
+// 	{ result.add(lower.getValue()); result.add(upper.getValue()); return result; }
+// }
