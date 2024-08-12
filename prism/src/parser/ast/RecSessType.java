@@ -17,7 +17,7 @@ public class RecSessType extends ProbSessType {
         return this.recvar;
     }
 
-    public ProbSessType body() {
+    public ProbSessType getBody() {
         return this.recvar;
     }
 

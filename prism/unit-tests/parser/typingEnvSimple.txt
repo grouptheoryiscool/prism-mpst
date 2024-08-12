@@ -1,0 +1,13 @@
+s[p]:q+{
+    [0.1,0.2]:m(int).endtype; 
+    [0.3,0.4]:m(bool).endtype
+    },
+s[q]:p&{
+    m(int).endtype; 
+    n(bool).r+{
+        [0.5,0.5]:n(int).endtype; 
+        [0.5,0.5]:k(bool).endtype}
+    },
+s[r]:q&{
+    n(int).endtype; 
+    k(bool).endtype}

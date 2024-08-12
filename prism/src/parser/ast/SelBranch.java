@@ -13,6 +13,14 @@ public class SelBranch {
         this.continuation = continuation;
     }
 
+    public ExpressionInterval getInterval() {
+        return interval;
+    }
+
+    public MessageType getMsgType() {
+        return msgType;
+    }
+
     public String getLabel() {
         return label;
     }
@@ -27,5 +35,5 @@ public class SelBranch {
 
     public int getNodes() {
         return continuation.getNodes();
-    }
+    } 
 }

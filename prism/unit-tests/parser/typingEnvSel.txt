@@ -1,0 +1,4 @@
+s[p]:q+{
+    [0.1,0.2]:m(int).endtype; 
+    [0.3,0.4]:m(bool).endtype
+    }

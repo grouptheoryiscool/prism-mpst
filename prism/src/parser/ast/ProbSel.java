@@ -43,6 +43,14 @@ public class ProbSel extends ProbSessType {
         this.role = role;
     }
 
+    public ArrayList<SelBranch> getBranches() {
+        return branches;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
     public int getNodes() {
         if (nodes == -1) {
             nodes = 1;
@@ -54,7 +62,7 @@ public class ProbSel extends ProbSessType {
     }   
 
     public String toString() {
-        String s = "+{";
+        String s = role + "+{";
         for (SelBranch b : branches) {
             s += b.toString();
             s += ";";

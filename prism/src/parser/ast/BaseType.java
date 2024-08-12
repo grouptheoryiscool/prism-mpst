@@ -1,15 +1,15 @@
 package parser.ast;
 
-import prism.PrismLangException;
-import parser.visitor.DeepCopy;
 import parser.visitor.ASTVisitor;
+import parser.visitor.DeepCopy;
+import prism.PrismLangException;
 
 public class BaseType extends MessageType {
     public enum basictype { INT, BOOL, FLOAT }
     private basictype basictype;
 
-    public BaseType(basictype type) {
-        this.basictype = basictype;
+    public BaseType(basictype mybasictype) {
+        this.basictype = mybasictype;
     }
 
     public basictype getBasicType() {
@@ -17,17 +17,8 @@ public class BaseType extends MessageType {
     }
     
     public String toString() {
-        switch(this.basictype) {
-            case INT:
-                return "int";
-            case BOOL:
-                return "bool";
-            case FLOAT:
-                return "float";
-            default:
-                return "unknown";
-        }
-    }
+        return this.basictype.toString();
+    } 
 
     // change later 
 

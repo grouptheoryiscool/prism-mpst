@@ -13,10 +13,14 @@ public class RecvBranch {
 
     public String getLabel() {
         return label;
-    }
+    } 
 
     public ProbSessType getContinuation() {
         return continuation;
+    }
+
+    public MessageType getMsgType() {
+        return msgType;
     }
 
     public String toString() {

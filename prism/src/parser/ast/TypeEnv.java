@@ -13,6 +13,14 @@ public class TypeEnv extends ASTElement {
         this.entries = entries;
     }
 
+    public HashMap<ChannelType, ProbSessType> getEntries() {
+        return this.entries;
+    }
+
+    public int getSize() {
+        return entries.size();
+    }
+
     public String toString() {
         String s = "";
         for (HashMap.Entry<ChannelType, ProbSessType> entry : entries.entrySet()) {

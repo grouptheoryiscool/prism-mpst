@@ -10,6 +10,14 @@ public class ChannelType {
         this.role = role;
     }
 
+    public String getRole() {
+        return role;
+    }
+
+    public String getSession() {
+        return session;
+    }
+
     public String toString() {
         return session + "[" + role + "]";
     }

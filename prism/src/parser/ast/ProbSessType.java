@@ -32,6 +32,7 @@ public abstract class ProbSessType extends MessageType {
     protected int nodes = -1; 
 
     public abstract int getNodes();
+    public abstract String toString();
 }
 
 // ------------------------------------------------------------------------------

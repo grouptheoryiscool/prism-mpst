@@ -51,7 +51,11 @@ public class Branching extends ProbSessType {
             }
         }
         return nodes;
-    }   
+    }  
+
+    public String getRole() {
+        return role;
+    } 
 
     public String toString() {
         String s = role + "&{";
@@ -60,6 +64,10 @@ public class Branching extends ProbSessType {
             s += ";";
         }
         return s + "}";
+    }
+
+    public ArrayList<RecvBranch> getOptions() {
+        return branches;
     }
 
     /* change all this */

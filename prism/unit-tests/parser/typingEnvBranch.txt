@@ -1,0 +1,6 @@
+s[q]:p&{
+    m(int).endtype; 
+    n(bool).r+{
+        [0.5,0.5]:n(int).endtype; 
+        [0.5,0.5]:k(bool).endtype}
+    }
