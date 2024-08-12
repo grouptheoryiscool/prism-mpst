@@ -18,7 +18,7 @@ public class RecSessType extends ProbSessType {
     }
 
     public ProbSessType getBody() {
-        return this.recvar;
+        return this.body;
     }
 
     public String toString() {

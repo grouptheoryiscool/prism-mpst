@@ -4207,15 +4207,15 @@ result = new Branching(options, role);
 recvar = new RecVar(var); result = new RecSessType(recvar, body);
           break;
           }
-        case REG_IDENT:{
-          var = Identifier();
-result = new RecVar(var);
-          break;
-          }
         case LPARENTH:{
           jj_consume_token(LPARENTH);
           result = probSessTypeAtom();
           jj_consume_token(RPARENTH);
+          break;
+          }
+        case REG_IDENT:{
+          var = Identifier();
+result = new RecVar(var);
           break;
           }
         default:

@@ -1,0 +1,8 @@
+s[p]:nu x.(q&{
+    l1(int).x; 
+    l2(bool).endtype
+    }),
+s[r]:q&{
+    l3(nu x.(
+        p+{[1,1]:l4(bool).x}
+    )).endtype}

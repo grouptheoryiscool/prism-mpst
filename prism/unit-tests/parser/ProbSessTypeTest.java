@@ -13,6 +13,7 @@ import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import jdk.jfr.Timestamp;
 
 
 public class ProbSessTypeTest {
@@ -107,18 +108,20 @@ public class ProbSessTypeTest {
         assertEquals(3, result.getSize());
         for (ChannelType chan : entries.keySet()) {
             assertEquals(chan.getSession(), "s");
-            if (chan.getRole() == "p") {
+            if (chan.getRole().equals("p")) {
                 ProbSel probSel = (ProbSel) entries.get(chan);
                 assertEquals(probSel.getRole(), "q");
-            } else if (chan.getRole() == "r") {
+            } else if (chan.getRole().equals("r")) {
                 Branching branches = (Branching) entries.get(chan);
                 assertEquals(2, branches.getOptions().size());
-            } else if (chan.getRole() == "q") {
+            } else if (chan.getRole().equals("q")) {
                 Branching branching = (Branching) entries.get(chan);
                 assertEquals(branching.getRole(), "p");
                 ProbSessType branchTwo = branching.getOptions().get(1).getContinuation();
                 ProbSel branchSel = (ProbSel) branchTwo;
                 assertEquals(branchSel.getRole(), "r");
+            } else {
+                throw new PrismLangException("Invalid role: " + chan.getRole());
             }
         }
     }
@@ -149,4 +152,37 @@ public class ProbSessTypeTest {
         assertEquals(msgTwo.getOptions().get(1).getLabel(), "m2");
     }
 
+    @Test 
+    public void typingEnvRec() throws PrismLangException {
+        InputStream str = null;
+        TypeEnv result = null;
+        try {
+            str = new FileInputStream("./unit-tests/parser/typingEnvRec.txt");
+            result = parser.ParseSessionType(str);
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found");
+        } catch (PrismLangException e) {
+            System.out.println("Parsing Error: " + e.getMessage());
+        }
+        HashMap<ChannelType, ProbSessType> entries = result.getEntries();
+        assertEquals(2, result.getSize());
+        for (ChannelType chan : entries.keySet()) {
+            assertEquals(chan.getSession(), "s");
+            if (chan.getRole().equals("p")) {
+                RecSessType rectypeOne = (RecSessType) entries.get(chan);
+                Branching branching = (Branching) rectypeOne.getBody();
+                RecVar recvar = (RecVar) branching.getOptions().get(0).getContinuation();
+                assertEquals(recvar.getRecVar(), "x");
+                assertEquals(branching.getOptions().get(1).getLabel(), "l2");
+            } else if (chan.getRole().equals("r")) {
+                Branching branches = (Branching) entries.get(chan);
+                RecvBranch rectypeTwo = (RecvBranch) branches.getOptions().get(0);
+                RecSessType recMsgType = (RecSessType) rectypeTwo.getMsgType();
+                ProbSel recTypeBody = (ProbSel) recMsgType.getBody();
+                assertEquals(recTypeBody.getBranches().get(0).getLabel(), "l4");
+            } else {
+                throw new PrismLangException("Invalid role: " + chan.getRole());
+            }
+        }
+    }
 }

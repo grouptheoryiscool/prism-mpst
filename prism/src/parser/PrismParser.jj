@@ -2189,11 +2189,11 @@ ProbSessType probSessTypeAtom() :
     |
         <MU> var = Identifier() <DOT> body = probSessTypeAtom()
         { recvar = new RecVar(var); result = new RecSessType(recvar, body); }
+	|
+        <LPARENTH> result = probSessTypeAtom() <RPARENTH>
     |
         var = Identifier()
         { result = new RecVar(var); }
-    |
-        <LPARENTH> result = probSessTypeAtom() <RPARENTH>
     )
     { return result; }
 }
