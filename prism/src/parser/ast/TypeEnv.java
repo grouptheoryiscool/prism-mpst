@@ -2,9 +2,11 @@ package parser.ast;
 
 import prism.PrismLangException;
 import parser.visitor.ASTVisitor;
-import parser.ast.ChannelType;
 import parser.visitor.DeepCopy;
 import java.util.HashMap;
+import java.util.Map;
+import prism.ModelType;
+import prism.PrismTranslationException;
 
 public class TypeEnv extends ASTElement {
     protected HashMap<ChannelType, ProbSessType> entries = new HashMap<ChannelType, ProbSessType>();
@@ -32,6 +34,17 @@ public class TypeEnv extends ASTElement {
 
     public void addEntry(ChannelType c, ProbSessType p) {
         entries.put(c, p);
+    }
+
+    public ModulesFile toModulesFile() throws PrismLangException, PrismTranslationException {
+        ModulesFile modulesFile = new ModulesFile();
+        modulesFile.setModelType(ModelType.IMDP);
+        for (Map.Entry<ChannelType, ProbSessType> entry : this.entries.entrySet()) {
+            String role = entry.getKey().getRole();
+            Module module = entry.getValue().toModule(role, entry.getKey().getEndVar());
+            modulesFile.addModule(module);
+        }
+        return modulesFile;
     }
 
     /* change all this */

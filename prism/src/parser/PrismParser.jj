@@ -37,6 +37,7 @@ import java.io.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.lang.Exception;
 
 import jltl2ba.SimpleLTL;
 import parser.BooleanUtils;
@@ -879,7 +880,18 @@ Command Command() :
 	begin = <LBRACKET> ( synch = Identifier() { comm.setSynch(synch); } )? <RBRACKET>
 	// Guard/updates
 	guard = Expression(false, false) { comm.setGuard(guard); } <RARROW> updates = Updates() { comm.setUpdates(updates); } <SEMICOLON>
-	{ comm.setPosition(begin, getToken(0)); return comm; }
+	{ 
+		System.out.println("guard: " + comm.getGuard().getClass().getName()); 
+		try {
+			ExpressionUnaryOp uniop = (ExpressionUnaryOp) comm.getGuard(); 
+			ExpressionBinaryOp binop = (ExpressionBinaryOp) uniop.getOperand();
+			System.out.println("operand 1: " + binop.getOperand1().getClass().getName());
+			System.out.println("operand 2: " + binop.getOperand2().getClass().getName());
+			ExpressionLiteral lit = (ExpressionLiteral) binop.getOperand2();
+			System.out.println("literal: " + lit.getValue() + lit.getType() + lit.getValue());
+		} catch (Exception e) { 
+			System.out.println("cannot be cast"); 
+		} comm.setPosition(begin, getToken(0)); return comm; }
 }
 
 // Updates
@@ -1204,7 +1216,7 @@ Expression Expression(boolean prop, boolean pathprop) :
 }
 {
 	ret = ExpressionTemporalBinary(prop, pathprop)
-	{ return ret; }
+	{ System.out.println("parsing expr: " + ret.toString()); return ret; }
 }
 
 // Expression: temporal operators, binary (U, W, R) and unary (X, F, G)
@@ -1233,7 +1245,7 @@ Expression ExpressionTemporalBinary(boolean prop, boolean pathprop) :
 	Token begin = null;
 }
 {
-	{ begin = getToken(1); } ret = ExpressionTemporalUnary(prop, pathprop)
+	{ System.out.println("expr temporal bin"); begin = getToken(1); } ret = ExpressionTemporalUnary(prop, pathprop)
 	[
 		// This production is only allowed in expressions if the "pathprop" parameter is true
 		{ if (!pathprop) throw generateParseException(); }
@@ -1245,7 +1257,7 @@ Expression ExpressionTemporalBinary(boolean prop, boolean pathprop) :
 		expr = ExpressionTemporalUnary(prop, pathprop)
 		{ exprTemp.setOperand2(expr); exprTemp.setPosition(begin, getToken(0)); ret = exprTemp; }
 	]
-	{ return ret; }
+	{ System.out.println("expr temp bin 2: " + ret.toString()); return ret; }
 }
 
 Expression ExpressionTemporalUnary(boolean prop, boolean pathprop) :
@@ -1268,7 +1280,7 @@ Expression ExpressionTemporalUnary(boolean prop, boolean pathprop) :
 	|
 		ret = ExpressionITE(prop, pathprop)
 	)
-	{ return ret; }
+	{ System.out.println("expr temp unary: " + ret.toString()); return ret; }
 }
 
 // Time bound for temporal operators
@@ -1369,7 +1381,15 @@ Expression ExpressionNot(boolean prop, boolean pathprop) :
 	|
 		ret = ExpressionEquality(prop, pathprop)
 	)
-	{ return ret; }
+	{ 
+		try {
+			ExpressionBinaryOp retEq = (ExpressionBinaryOp) ret; 
+			System.out.println(retEq.getOperand1().toString() + ": " + retEq.getOperand1().getClass().getName() + ", " + retEq.getOperand2().toString() + ": " + retEq.getOperand2().getClass().getName());
+		} catch (Exception e) { 
+			System.out.println("not bin op: " + ret.toString() + " " + ret.getClass().getName()); 
+		} 
+		System.out.println("Parsing eq: " + ret.toString()); 
+		return ret; }
 }
 
 // Expression: equality operators: =, !=

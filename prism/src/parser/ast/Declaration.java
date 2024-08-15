@@ -6,7 +6,7 @@
 //	* Mark Kattenbelt <mark.kattenbelt@comlab.ox.ac.uk> (University of Oxford)
 //	
 //------------------------------------------------------------------------------
-//	
+//
 //	This file is part of PRISM.
 //	
 //	PRISM is free software; you can redistribute it and/or modify

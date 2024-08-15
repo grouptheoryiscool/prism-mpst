@@ -5,7 +5,7 @@
 //	* Dave Parker <david.parker@comlab.ox.ac.uk> (University of Oxford, formerly University of Birmingham)
 //	
 //------------------------------------------------------------------------------
-//	
+//	 
 //	This file is part of PRISM.
 //	
 //	PRISM is free software; you can redistribute it and/or modify
@@ -26,6 +26,7 @@
 
 package parser.ast;
 
+import parser.ast.Module;
 import parser.visitor.ASTVisitor;
 import parser.visitor.DeepCopy;
 import prism.PrismLangException;

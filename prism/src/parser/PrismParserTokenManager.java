@@ -5,6 +5,7 @@ import java.io.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.lang.Exception;
 import jltl2ba.SimpleLTL;
 import parser.BooleanUtils;
 import parser.ast.*;

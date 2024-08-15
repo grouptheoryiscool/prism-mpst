@@ -27,7 +27,6 @@
 package parser.ast;
 
 import java.math.BigInteger;
-
 import param.BigRational;
 import parser.EvaluateContext;
 import parser.EvaluateContext.EvalMode;
@@ -79,6 +78,11 @@ public class ExpressionLiteral extends Expression
 	public String getString()
 	{
 		return string;
+	}
+
+	public Type getType()
+	{
+		return type;
 	}
 	
 	// Methods required for Expression:

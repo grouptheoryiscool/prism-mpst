@@ -2,7 +2,7 @@
 //	
 //	Copyright (c) 2002-
 //	Authors:
-//	* Dave Parker <d.a.parker@cs.bham.ac.uk> (University of Birmingham/Oxford)
+//	* Joachim Klein <klein@tcs.inf.tu-dresden.de> (TU Dresden)
 //	
 //------------------------------------------------------------------------------
 //	
@@ -24,20 +24,17 @@
 //	
 //==============================================================================
 
-package parser.ast;
+package prism;
 
-import parser.ast.Module;
-import prism.PrismTranslationException;
-
-// Class representing Probabilistic Session Types 
-
-public abstract class ProbSessType extends MessageType {
-    protected int nodes = -1; 
-
-    public abstract int getNodes();
-    public abstract String toString();
-    public abstract Module toModule(String parentRole, ExpressionIdent endVar) throws PrismTranslationException;
-    public abstract void projectCommands(Module m, int currentState, int recState, String parentRole, ExpressionIdent endVar) throws PrismTranslationException;
+/**
+ * An exception indicating that a given feature is (currently) not supported,
+ * e.g., a given combination of model type, engine and property.
+ */
+public class PrismTranslationException extends PrismException
+{
+	public PrismTranslationException(String s)
+	{
+		super(s);
+	}
+	
 }
-
-// ------------------------------------------------------------------------------
