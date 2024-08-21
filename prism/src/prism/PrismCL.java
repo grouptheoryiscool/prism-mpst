@@ -705,6 +705,7 @@ public class PrismCL implements PrismModelListener
 					typeEnv = prism.ParseTypeEnv(new File(modelFilename));
 					modulesFile = typeEnv.toModulesFile();
 					modulesFile.tidyUp();
+					System.out.println("Modules File generated: \n" + modulesFile.toString());
 				} else {
 					modulesFile = prism.parseModelFile(new File(modelFilename), typeOverride);
 				}

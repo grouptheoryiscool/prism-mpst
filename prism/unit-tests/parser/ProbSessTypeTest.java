@@ -260,7 +260,7 @@ public class ProbSessTypeTest {
                                 assertEquals(val.getValue(), true);
                             } else if (ue.getVar().equals("s_q")) {
                                 ExpressionLiteral val = (ExpressionLiteral) ue.getExpression();
-                                assertEquals(val.getValue(), 9);
+                                assertEquals(val.getValue(), 10);
                             } else {
                                 fail();
                             }

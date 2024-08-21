@@ -106,23 +106,19 @@ public class Branching extends ProbSessType {
         ExpressionLiteral trueVal = new ExpressionLiteral(TypeBool.getInstance(), Boolean.valueOf(true));
         ExpressionLiteral stateVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(k));
         ExpressionBinaryOp stateEq = new ExpressionBinaryOp(5, stateVar, stateVal);
-        // add a single command for every message choice 
-        int prevNodes = 0; // to determine new state index 
+        // add a single command for every message choice
         int finalState = 0; // the max value s_p can take
+        int stateAfterChoiceI = k + 1;
         for (int i = 0; i < branches.size(); i++) {
             RecvBranch b = branches.get(i);
             Command c = new Command();
-            String synch = parent + "!" + role + "_" + b.getLabel();
-            c.setSynch(synch);
+            c.setSynch(role + "!" + parent + "_" + b.getLabel());
             c.setGuard(stateEq);
             Updates updates = new Updates();
             updates.setParent(c);
             Update update = new Update();
             update.setParent(updates);
-            int stateAfterChoiceI;
             if (!(b.getContinuation() instanceof RecVar)) {
-                // set new state
-                stateAfterChoiceI = k + i + prevNodes;
                 // if continuation is end then set end to true
                 if (b.getContinuation() instanceof TypeEnd) {
                     UpdateElement updateElementEnd = new UpdateElement(endVar, trueVal);
@@ -141,8 +137,8 @@ public class Branching extends ProbSessType {
             updates.addUpdate(null, update);
             c.setUpdates(updates);
             m.addCommand(c);
-            // update prevNodes for next branch
-            prevNodes += b.getContinuation().getNodes();
+            // update node number for next branch
+            stateAfterChoiceI = finalState + 1;
         }
         return finalState;
     }

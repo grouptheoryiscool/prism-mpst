@@ -75,9 +75,10 @@ public class ProbSel extends ProbSessType {
     }
 
     public Module toModule(ExpressionIdent parentRole, ExpressionIdent endVar) throws PrismTranslationException{
+        // setting module name
         Module module = new Module(parentRole.getName());
         module.setNameASTElement(parentRole);
-        // LATER: this parent role should probably be a field of the class
+        // creating state variable
         String stateVarString = "s_" + parentRole.getName();
         ExpressionIdent stateVarIdent = new ExpressionIdent(stateVarString);
         // determine the last state of the module
@@ -111,14 +112,14 @@ public class ProbSel extends ProbSessType {
         //first step that chooses which branch to take
         Updates updates = new Updates();
         updates.setParent(c);
-        int prevNodes = 0; // to determine new state index 
         int finalState = 0; // the max value s_p can take
+        int stateAfterChoiceI = k + branches.size() + 1;
         /* add a single command where the choice is made
         and for every choice, add a command that synchronizes with the choice */
         for (int i = 0; i < branches.size(); i++) {
             SelBranch b = branches.get(i);
             ExpressionInterval interval = b.getInterval();
-            int newState = k + i;
+            int newState = k + i + 1;
             ExpressionLiteral newStateVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(newState));
             Update update = new Update();
             update.setParent(updates);
@@ -127,16 +128,14 @@ public class ProbSel extends ProbSessType {
             updates.addUpdate(interval, update);
             // second step that synchronizes with recv branch
             Command c2 = new Command();
-            String synch = parent + "!" + role + "_" + b.getLabel();
             ExpressionBinaryOp guard = new ExpressionBinaryOp(5, stateVar, newStateVal);
             c2.setGuard(guard);
+            c2.setSynch(parent + "!" + role + "_" + b.getLabel());
             Updates updates2 = new Updates();
             updates2.setParent(c2);
             Update update2 = new Update();
             update2.setParent(updates2);
-            int stateAfterChoiceI;
             if (!(b.getContinuation() instanceof RecVar)) {
-                stateAfterChoiceI = k + branches.size() + 1 + prevNodes;
                 // if continuation is end then set end to true
                 if (b.getContinuation() instanceof TypeEnd) {
                     UpdateElement updateElementEnd = new UpdateElement(endVar, trueVal);
@@ -155,8 +154,8 @@ public class ProbSel extends ProbSessType {
             updates2.addUpdate(null, update2);
             c2.setUpdates(updates2);
             m.addCommand(c2);
-            // determine prevNodes for next branch
-            prevNodes += b.getContinuation().getNodes();
+            // determine node number for next branch
+            stateAfterChoiceI = finalState + 1;
         }
         // first step
         c.setUpdates(updates);

@@ -15,7 +15,7 @@ public class TypeEnd extends ProbSessType {
     }
 
     public int getNodes() {
-        return 0;
+        return 1;
     }
 
     public Module toModule(ExpressionIdent parentRole, ExpressionIdent endVar) throws PrismTranslationException {
