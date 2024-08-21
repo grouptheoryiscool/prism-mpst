@@ -1,6 +1,8 @@
 package parser.ast;
 
 import parser.ast.Module;
+import parser.type.TypeBool;
+import parser.type.TypeInt;
 import parser.visitor.ASTVisitor;
 import parser.visitor.DeepCopy;
 import prism.PrismLangException;
@@ -16,12 +18,26 @@ public class TypeEnd extends ProbSessType {
         return 0;
     }
 
-    public Module toModule(String parentRole, ExpressionIdent endVar) throws PrismTranslationException {
-        Module module = new Module(parentRole);
+    public Module toModule(ExpressionIdent parentRole, ExpressionIdent endVar) throws PrismTranslationException {
+        // set module name
+        Module module = new Module(parentRole.getName());
+        module.setNameASTElement(parentRole);
+        // state variable for parent role
+        String stateVarString = "s_" + parentRole.getName();
+        ExpressionIdent stateVarIdent = new ExpressionIdent(stateVarString);
+        ExpressionLiteral stateVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(0));
+        DeclarationInt declType = new DeclarationInt(stateVal, stateVal);
+        module.addDeclaration(new Declaration(stateVarString, declType));
+        // add an end variable to the module
+        String endVarString = endVar.getName();
+        ExpressionLiteral trueVal = new ExpressionLiteral(TypeBool.getInstance(), Boolean.valueOf(true));
+        Declaration endDecl = new Declaration(endVarString, new DeclarationBool());
+        endDecl.setStart(trueVal);
+        module.addDeclaration(endDecl);
         return module;
     }
 
-    public void projectCommands (Module m, int k, int r, String sessRole, ExpressionIdent endVar) throws PrismTranslationException {
+    public int projectCommands (Module m, int k, int r, ExpressionIdent sessRole, ExpressionIdent endVar, String parent) throws PrismTranslationException {
         // This should never be called.
         throw new PrismTranslationException("Invalid translation, EndType does not have commands to project");
     }

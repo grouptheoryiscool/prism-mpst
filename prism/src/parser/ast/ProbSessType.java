@@ -36,8 +36,8 @@ public abstract class ProbSessType extends MessageType {
 
     public abstract int getNodes();
     public abstract String toString();
-    public abstract Module toModule(String parentRole, ExpressionIdent endVar) throws PrismTranslationException;
-    public abstract void projectCommands(Module m, int currentState, int recState, String parentRole, ExpressionIdent endVar) throws PrismTranslationException;
+    public abstract Module toModule(ExpressionIdent parentRole, ExpressionIdent endVar) throws PrismTranslationException;
+    public abstract int projectCommands(Module m, int currentState, int recState, ExpressionIdent parentRole, ExpressionIdent endVar, String parent) throws PrismTranslationException;
 }
 
 // ------------------------------------------------------------------------------

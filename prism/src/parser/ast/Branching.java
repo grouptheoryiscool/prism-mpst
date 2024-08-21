@@ -26,6 +26,7 @@
 
 package parser.ast;
 
+import java.nio.channels.Channel;
 import java.util.ArrayList;
 import parser.ast.Module;
 import parser.type.TypeBool;
@@ -74,23 +75,44 @@ public class Branching extends ProbSessType {
         return branches;
     }
 
-    public Module toModule(String sessRole, ExpressionIdent endVar) throws PrismTranslationException{
-        Module module = new Module(sessRole);
-        // LATER: this session role should probably be a field of the class
-        projectCommands(module, 0, -1, sessRole, endVar);
+    public Module toModule(ExpressionIdent parentRole, ExpressionIdent endVar) throws PrismTranslationException{
+        Module module = new Module(parentRole.getName());
+        module.setNameASTElement(parentRole);
+        String stateVarString = "s_" + parentRole.getName();
+        ExpressionIdent stateVarIdent = new ExpressionIdent(stateVarString);
+        // determine the last state of the module
+        int maxState = projectCommands(module, 0, -1, stateVarIdent, endVar, parentRole.getName());
+        ExpressionLiteral low = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(0));
+        ExpressionLiteral high = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(maxState));
+        DeclarationInt declType = new DeclarationInt(low, high); 
+        module.addDeclaration(new Declaration(stateVarString, declType));
+        // add an end variable to the module
+        String endVarString = endVar.getName();
+        ExpressionLiteral falseVal = new ExpressionLiteral(TypeBool.getInstance(), Boolean.valueOf(false));
+        Declaration endDecl = new Declaration(endVarString, new DeclarationBool());
+        endDecl.setStart(falseVal);
+        module.addDeclaration(endDecl);
         return module;
     }
 
-    public void projectCommands(Module m, int k, int r, String sessRole, ExpressionIdent endVar) throws PrismTranslationException{
+    public int projectCommands(
+        Module m, 
+        int k, 
+        int r, 
+        ExpressionIdent stateVar, 
+        ExpressionIdent endVar, 
+        String parent
+    ) throws PrismTranslationException {
         ExpressionLiteral trueVal = new ExpressionLiteral(TypeBool.getInstance(), Boolean.valueOf(true));
-        ExpressionIdent stateVar = new ExpressionIdent("s_" + role);
         ExpressionLiteral stateVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(k));
         ExpressionBinaryOp stateEq = new ExpressionBinaryOp(5, stateVar, stateVal);
         // add a single command for every message choice 
+        int prevNodes = 0; // to determine new state index 
+        int finalState = 0; // the max value s_p can take
         for (int i = 0; i < branches.size(); i++) {
             RecvBranch b = branches.get(i);
             Command c = new Command();
-            String synch = sessRole + "!" + role + "_" + b.getLabel();
+            String synch = parent + "!" + role + "_" + b.getLabel();
             c.setSynch(synch);
             c.setGuard(stateEq);
             Updates updates = new Updates();
@@ -98,22 +120,17 @@ public class Branching extends ProbSessType {
             Update update = new Update();
             update.setParent(updates);
             int stateAfterChoiceI;
-            // LATER: can be made more efficient
             if (!(b.getContinuation() instanceof RecVar)) {
                 // set new state
-                int toAdd = 0;
-                for (int j = 0; j < i; j++) {
-                    toAdd += branches.get(j).getNodes();
-                }
-                stateAfterChoiceI = toAdd + 1 + k + branches.size();
+                stateAfterChoiceI = k + i + prevNodes;
                 // if continuation is end then set end to true
                 if (b.getContinuation() instanceof TypeEnd) {
                     UpdateElement updateElementEnd = new UpdateElement(endVar, trueVal);
                     update.addElement(updateElementEnd);
+                    finalState = stateAfterChoiceI;
                 } else {
                     // if continuation is not end or rec we need to project commands
-                    int finalState = k + branches.size() + 1 + toAdd;
-                    b.getContinuation().projectCommands(m, finalState, r, sessRole, endVar);
+                    finalState = b.getContinuation().projectCommands(m, stateAfterChoiceI, r, stateVar, endVar, parent);
                 }
             } else {
                 stateAfterChoiceI = r;
@@ -124,7 +141,10 @@ public class Branching extends ProbSessType {
             updates.addUpdate(null, update);
             c.setUpdates(updates);
             m.addCommand(c);
+            // update prevNodes for next branch
+            prevNodes += b.getContinuation().getNodes();
         }
+        return finalState;
     }
 
     /* change all this */

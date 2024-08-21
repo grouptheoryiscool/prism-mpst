@@ -69,6 +69,7 @@ import parser.ast.LabelList;
 import parser.ast.ModulesFile;
 import parser.ast.PropertiesFile;
 import parser.ast.Property;
+import parser.ast.TypeEnv;
 import prism.Accuracy.AccuracyLevel;
 import pta.DigitalClocks;
 import pta.PTAModelChecker;
@@ -1253,6 +1254,37 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		modulesFile.tidyUp();
 
 		return modulesFile;
+	}
+
+	/**
+	 * Parse a Typing Env from a file.
+	 * @param file File to read in
+	 */
+	public TypeEnv ParseTypeEnv(File file) throws FileNotFoundException, PrismLangException
+	{
+		FileInputStream strTypeEnv;
+		PrismParser prismParser;
+		TypeEnv typeEnv = null;
+
+		// open file
+		strTypeEnv = new FileInputStream(file);
+
+		try {
+			// obtain exclusive access to the prism parser
+			// (don't forget to release it afterwards)
+			prismParser = getPrismParser();
+			try {
+				// parse file
+				typeEnv = prismParser.parseTypeEnv(strTypeEnv);
+			} finally {
+				// release prism parser
+				releasePrismParser();
+			}
+		} catch (InterruptedException ie) {
+			throw new PrismLangException("Concurrency error in parser");
+		}
+
+		return typeEnv;
 	}
 
 	/**

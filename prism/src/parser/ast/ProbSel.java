@@ -74,23 +74,45 @@ public class ProbSel extends ProbSessType {
         return s + "}";
     }
 
-    public Module toModule(String sessRole, ExpressionIdent endVar) throws PrismTranslationException{
-        Module module = new Module(sessRole);
-        // LATER: this session role should probably be a field of the class
-        projectCommands(module, 0, -1, sessRole, endVar);
+    public Module toModule(ExpressionIdent parentRole, ExpressionIdent endVar) throws PrismTranslationException{
+        Module module = new Module(parentRole.getName());
+        module.setNameASTElement(parentRole);
+        // LATER: this parent role should probably be a field of the class
+        String stateVarString = "s_" + parentRole.getName();
+        ExpressionIdent stateVarIdent = new ExpressionIdent(stateVarString);
+        // determine the last state of the module
+        int maxState = projectCommands(module, 0, -1, stateVarIdent, endVar, parentRole.getName());
+        ExpressionLiteral low = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(0));
+        ExpressionLiteral high = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(maxState));
+        DeclarationInt declType = new DeclarationInt(low, high); 
+        module.addDeclaration(new Declaration(stateVarString, declType));
+        // add an end variable to the module
+        String endVarString = endVar.getName();
+        ExpressionLiteral falseVal = new ExpressionLiteral(TypeBool.getInstance(), Boolean.valueOf(false));
+        Declaration endDecl = new Declaration(endVarString, new DeclarationBool());
+        endDecl.setStart(falseVal);
+        module.addDeclaration(endDecl);
         return module;
     }
 
-    public void projectCommands(Module m, int k, int r, String sessRole, ExpressionIdent endVar) throws PrismTranslationException {
+    public int projectCommands(
+        Module m, 
+        int k, 
+        int r, 
+        ExpressionIdent stateVar, 
+        ExpressionIdent endVar, 
+        String parent
+    ) throws PrismTranslationException {
         ExpressionLiteral trueVal = new ExpressionLiteral(TypeBool.getInstance(), Boolean.valueOf(true));
         Command c = new Command();
-        ExpressionIdent stateVar = new ExpressionIdent("s_" + role);
         ExpressionLiteral stateVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(k));
         ExpressionBinaryOp stateEq = new ExpressionBinaryOp(5, stateVar, stateVal);
         c.setGuard(stateEq);
         //first step that chooses which branch to take
         Updates updates = new Updates();
         updates.setParent(c);
+        int prevNodes = 0; // to determine new state index 
+        int finalState = 0; // the max value s_p can take
         /* add a single command where the choice is made
         and for every choice, add a command that synchronizes with the choice */
         for (int i = 0; i < branches.size(); i++) {
@@ -105,7 +127,7 @@ public class ProbSel extends ProbSessType {
             updates.addUpdate(interval, update);
             // second step that synchronizes with recv branch
             Command c2 = new Command();
-            String synch = sessRole + "!" + role + "_" + b.getLabel();
+            String synch = parent + "!" + role + "_" + b.getLabel();
             ExpressionBinaryOp guard = new ExpressionBinaryOp(5, stateVar, newStateVal);
             c2.setGuard(guard);
             Updates updates2 = new Updates();
@@ -113,22 +135,16 @@ public class ProbSel extends ProbSessType {
             Update update2 = new Update();
             update2.setParent(updates2);
             int stateAfterChoiceI;
-            // LATER: can be made more efficient
             if (!(b.getContinuation() instanceof RecVar)) {
-                // set new state
-                int toAdd = 0;
-                for (int j = 0; j < i; j++) {
-                    toAdd += branches.get(j).getNodes();
-                }
-                stateAfterChoiceI = toAdd + 1 + k + branches.size();
+                stateAfterChoiceI = k + branches.size() + 1 + prevNodes;
                 // if continuation is end then set end to true
                 if (b.getContinuation() instanceof TypeEnd) {
                     UpdateElement updateElementEnd = new UpdateElement(endVar, trueVal);
                     update2.addElement(updateElementEnd);
+                    finalState = stateAfterChoiceI;
                 } else {
                     // if continuation is not end or rec we need to project commands
-                    int finalState = k + branches.size() + 1 + toAdd;
-                    b.getContinuation().projectCommands(m, finalState, r, sessRole, endVar);
+                    finalState = b.getContinuation().projectCommands(m, stateAfterChoiceI, r, stateVar, endVar, parent);
                 }
             } else {
                 stateAfterChoiceI = r;
@@ -139,10 +155,13 @@ public class ProbSel extends ProbSessType {
             updates2.addUpdate(null, update2);
             c2.setUpdates(updates2);
             m.addCommand(c2);
+            // determine prevNodes for next branch
+            prevNodes += b.getContinuation().getNodes();
         }
         // first step
         c.setUpdates(updates);
         m.addCommand(c);
+        return finalState;
     }
 
     /* change all this */

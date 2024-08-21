@@ -47,6 +47,7 @@ import parser.Values;
 import parser.ast.Expression;
 import parser.ast.ExpressionReward;
 import parser.ast.ModulesFile;
+import parser.ast.TypeEnv;
 import parser.ast.PropertiesFile;
 import parser.ast.Property;
 import strat.StrategyExportOptions;
@@ -123,6 +124,7 @@ public class PrismCL implements PrismModelListener
 	private boolean nobuild = false;
 	private boolean test = false;
 	private boolean testExitsOnFail = true;
+	private boolean sessionType = false;
 
 	// property info
 	private List<Object> propertyIndices = null;
@@ -182,6 +184,9 @@ public class PrismCL implements PrismModelListener
 	// storage for parsed model/properties files
 	private ModulesFile modulesFile = null;
 	private PropertiesFile propertiesFile = null;
+
+	// parsed typing environment
+	private TypeEnv typeEnv = null;
 
 	// model failure info
 	boolean modelBuildFail = false;
@@ -696,7 +701,13 @@ public class PrismCL implements PrismModelListener
 				prism.loadModelFromExplicitFiles(sf, new File(modelFilename), lf, srf, typeOverride);
 			} else {
 				mainLog.print("\nParsing model file \"" + modelFilename + "\"...\n");
-				modulesFile = prism.parseModelFile(new File(modelFilename), typeOverride);
+				if (sessionType) {
+					typeEnv = prism.ParseTypeEnv(new File(modelFilename));
+					modulesFile = typeEnv.toModulesFile();
+					modulesFile.tidyUp();
+				} else {
+					modulesFile = prism.parseModelFile(new File(modelFilename), typeOverride);
+				}
 				prism.loadPRISMModel(modulesFile);
 			}
 		} catch (FileNotFoundException e) {
@@ -2040,6 +2051,12 @@ public class PrismCL implements PrismModelListener
 				// enable bisimulation minimisation before model checking (hidden option)
 				else if (sw.equals("bisim")) {
 					prism.setDoBisim(true);
+				}
+
+				// Parse a session type 
+
+				else if (sw.equals("mpst")) {
+					sessionType = true;
 				}
 
 				// Other switches - pass to PrismSettings

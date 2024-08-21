@@ -9,20 +9,28 @@ import java.io.InputStream;
 import java.io.FileNotFoundException;
 import java.lang.reflect.Array;
 import java.nio.channels.Channel;
-import java.util.Scanner;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+
 import jdk.jfr.Timestamp;
+import prism.PrismTranslationException;
 
 
 public class ProbSessTypeTest {
 
     private static PrismParser parser;
+    private static ModulesFile mf1;
+    private static ModulesFile mf2;
+
 
     @BeforeClass
-    public static void setUp() {
+    public static void setUp() throws PrismLangException, PrismTranslationException, FileNotFoundException {
         parser = new PrismParser();
+        InputStream str1 = new FileInputStream("./unit-tests/parser/TranslationSimple.txt");
+        InputStream str2 = new FileInputStream("./unit-tests/parser/TranslationRec.txt");
+        mf1 = parser.parseTypeEnv(str1).toModulesFile();
+        mf1.tidyUp();
+        System.out.println("Module Files generated: \n" + mf1.toString());
+        //mf2 = parser.parseTypeEnv(str2).toModulesFile();
     }
 
     @Test 
@@ -31,7 +39,7 @@ public class ProbSessTypeTest {
         TypeEnv result = null;
         try {
             str = new FileInputStream("./unit-tests/parser/typingEnvBranch.txt");
-            result = parser.ParseSessionType(str);
+            result = parser.parseTypeEnv(str);
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
         } catch (PrismLangException e) {
@@ -64,7 +72,7 @@ public class ProbSessTypeTest {
         TypeEnv result = null;
         try {
             str = new FileInputStream("./unit-tests/parser/typingEnvSel.txt");
-            result = parser.ParseSessionType(str);
+            result = parser.parseTypeEnv(str);
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
         } catch (PrismLangException e) {
@@ -98,7 +106,7 @@ public class ProbSessTypeTest {
         TypeEnv result = null;
         try {
             str = new FileInputStream("./unit-tests/parser/typingEnvSimple.txt");
-            result = parser.ParseSessionType(str);
+            result = parser.parseTypeEnv(str);
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
         } catch (PrismLangException e) {
@@ -132,7 +140,7 @@ public class ProbSessTypeTest {
         TypeEnv result = null;
         try {
             str = new FileInputStream("./unit-tests/parser/typingEnvNested.txt");
-            result = parser.ParseSessionType(str);
+            result = parser.parseTypeEnv(str);
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
         } catch (PrismLangException e) {
@@ -158,7 +166,7 @@ public class ProbSessTypeTest {
         TypeEnv result = null;
         try {
             str = new FileInputStream("./unit-tests/parser/typingEnvRec.txt");
-            result = parser.ParseSessionType(str);
+            result = parser.parseTypeEnv(str);
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
         } catch (PrismLangException e) {
@@ -183,6 +191,83 @@ public class ProbSessTypeTest {
             } else {
                 throw new PrismLangException("Invalid role: " + chan.getRole());
             }
+        }
+    }
+
+    @Test
+    public void moduleNames() {
+        String [] genmodnames = mf1.getModuleNames();
+        Arrays.sort(genmodnames);
+        String[] modnames = {"p", "q", "r"};
+        assertArrayEquals(modnames, genmodnames);
+    }
+
+    @Test
+    public void statesAndEnd() throws PrismTranslationException {
+        for (int i = 0; i < 2; i++) {
+            parser.ast.Module m = mf1.getModule(i);
+            if (m.getName().equals("p")) {
+                assertEquals(m.getNumCommands(), 6);
+                for (int j = 0; j < 6; j++) {
+                    Command c = m.getCommand(j);
+                    Updates us = c.getUpdates();
+                    if (c.getSynch().equals("p!r_m4")) {
+                        assertEquals(us.getNumUpdates(), 1);
+                        Update u = us.getUpdate(0);
+                        assertEquals(u.getNumElements(), 2);
+                        for (int k = 0; k < 2; k++) {
+                            UpdateElement ue = u.getElement(k);
+                            if (ue.getVar().equals("end_p")) {
+                                ExpressionLiteral val = (ExpressionLiteral) ue.getExpression();
+                                assertEquals(val.getValue(), true);
+                            } else if (ue.getVar().equals("s_p")) {
+                                ExpressionLiteral val = (ExpressionLiteral) ue.getExpression();
+                                assertEquals(val.getValue(), 4);
+                            } else {
+                                fail();
+                            }
+                        }
+                    }
+                }
+            } else if (m.getName().equals("r")) {
+                assertEquals(m.getNumCommands(), 6);
+                for (int j = 0; j < 6; j++) {
+                    Command c = m.getCommand(j);
+                    Updates us = c.getUpdates();
+                    assertEquals(us.getNumUpdates(), 1);
+                    Update u = us.getUpdate(0);
+                    if (c.getSynch().equals("p!r_m5")) {
+                        assertEquals(u.getNumElements(), 1);
+                        UpdateElement ue = u.getElement(0);
+                        assertEquals(ue.getVar(), "s_r");
+                        ExpressionLiteral val = (ExpressionLiteral) ue.getExpression();
+                        assertEquals(val.getValue(), 4);
+                    }
+                }
+            } else if (m.getName().equals("q")) {
+                assertEquals(m.getNumCommands(), 7);
+                for (int j = 0; j < 7; j++) {
+                    Command c = m.getCommand(j);
+                    if (c.getSynch().equals("q!p_m3")) {
+                        Updates us = c.getUpdates();
+                        assertEquals(us.getNumUpdates(), 1);
+                        Update u = us.getUpdate(0);
+                        assertEquals(u.getNumElements(), 2);
+                        for (int k = 0; k < 2; k++) {
+                            UpdateElement ue = u.getElement(k);
+                            if (ue.getVar().equals("end_q")) {
+                                ExpressionLiteral val = (ExpressionLiteral) ue.getExpression();
+                                assertEquals(val.getValue(), true);
+                            } else if (ue.getVar().equals("s_q")) {
+                                ExpressionLiteral val = (ExpressionLiteral) ue.getExpression();
+                                assertEquals(val.getValue(), 9);
+                            } else {
+                                fail();
+                            }
+                        }
+                    }
+                }
+            } else { fail(); }
         }
     }
 }

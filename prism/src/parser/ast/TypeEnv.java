@@ -8,6 +8,8 @@ import java.util.Map;
 import prism.ModelType;
 import prism.PrismTranslationException;
 
+import parser.ast.ExpressionIdent;
+
 public class TypeEnv extends ASTElement {
     protected HashMap<ChannelType, ProbSessType> entries = new HashMap<ChannelType, ProbSessType>();
 
@@ -41,7 +43,8 @@ public class TypeEnv extends ASTElement {
         modulesFile.setModelType(ModelType.IMDP);
         for (Map.Entry<ChannelType, ProbSessType> entry : this.entries.entrySet()) {
             String role = entry.getKey().getRole();
-            Module module = entry.getValue().toModule(role, entry.getKey().getEndVar());
+            ExpressionIdent parentRole = new ExpressionIdent(role);
+            Module module = entry.getValue().toModule(parentRole, entry.getKey().getEndVar());
             modulesFile.addModule(module);
         }
         return modulesFile;

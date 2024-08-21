@@ -25,12 +25,12 @@ public class RecVar extends ProbSessType {
         return 0;
     }
 
-    public Module toModule(String parentRole, ExpressionIdent endVar) throws PrismTranslationException {
+    public Module toModule(ExpressionIdent parentRole, ExpressionIdent endVar) throws PrismTranslationException {
         // This should never be called.
         throw new PrismTranslationException("Invalid translation, RecVar cannot be translated to module");
     }
 
-    public void projectCommands(Module m, int k, int r, String sessRole, ExpressionIdent endVar) throws PrismTranslationException {
+    public int projectCommands(Module m, int k, int r, ExpressionIdent stateVar, ExpressionIdent endVar, String parent) throws PrismTranslationException {
         // This should never be called.
         throw new PrismTranslationException("Invalid translation, RecVar cannot be translated to module");
     }
