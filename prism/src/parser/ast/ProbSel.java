@@ -27,6 +27,7 @@
 package parser.ast;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import parser.ast.Module;
 import parser.type.TypeBool;
 import parser.type.TypeInt;
@@ -74,7 +75,14 @@ public class ProbSel extends ProbSessType {
         return s + "}";
     }
 
-    public Module toModule(ExpressionIdent parentRole, ExpressionIdent endVar) throws PrismTranslationException{
+    public Module toModule(
+            ExpressionIdent parentRole,
+            HashMap<String, Integer> labelsEncoding,
+            int numLabels,
+            ArrayList<ExpressionBinaryOp> sendStates,
+            ArrayList<ExpressionBinaryOp> pendingStates,
+            ArrayList<ExpressionBinaryOp> endStates
+    ) throws PrismTranslationException {
         // setting module name
         Module module = new Module(parentRole.getName());
         module.setNameASTElement(parentRole);
@@ -82,17 +90,11 @@ public class ProbSel extends ProbSessType {
         String stateVarString = "s_" + parentRole.getName();
         ExpressionIdent stateVarIdent = new ExpressionIdent(stateVarString);
         // determine the last state of the module
-        int maxState = projectCommands(module, 0, -1, stateVarIdent, endVar, parentRole.getName());
+        int maxState = projectCommands(module, 0, -1, stateVarIdent, parentRole.getName(), labelsEncoding, numLabels, sendStates, pendingStates, endStates);
         ExpressionLiteral low = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(0));
         ExpressionLiteral high = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(maxState));
         DeclarationInt declType = new DeclarationInt(low, high); 
         module.addDeclaration(new Declaration(stateVarString, declType));
-        // add an end variable to the module
-        String endVarString = endVar.getName();
-        ExpressionLiteral falseVal = new ExpressionLiteral(TypeBool.getInstance(), Boolean.valueOf(false));
-        Declaration endDecl = new Declaration(endVarString, new DeclarationBool());
-        endDecl.setStart(falseVal);
-        module.addDeclaration(endDecl);
         return module;
     }
 
@@ -100,18 +102,22 @@ public class ProbSel extends ProbSessType {
         Module m, 
         int k, 
         int r, 
-        ExpressionIdent stateVar, 
-        ExpressionIdent endVar, 
-        String parent
+        ExpressionIdent stateVar,
+        String parent,
+        HashMap<String, Integer> labelsEncoding,
+        int numLabels,
+        ArrayList<ExpressionBinaryOp> sendStates,
+        ArrayList<ExpressionBinaryOp> pendingStates,
+        ArrayList<ExpressionBinaryOp> endStates
     ) throws PrismTranslationException {
-        ExpressionLiteral trueVal = new ExpressionLiteral(TypeBool.getInstance(), Boolean.valueOf(true));
+        // ExpressionLiteral trueVal = new ExpressionLiteral(TypeBool.getInstance(), Boolean.valueOf(true));
         Command c = new Command();
         ExpressionLiteral stateVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(k));
         ExpressionBinaryOp stateEq = new ExpressionBinaryOp(5, stateVar, stateVal);
         c.setGuard(stateEq);
+        c.setSynch(parent + "_" + role);
         //first step that chooses which branch to take
         Updates updates = new Updates();
-        updates.setParent(c);
         int finalState = 0; // the max value s_p can take
         int stateAfterChoiceI = k + branches.size() + 1;
         /* add a single command where the choice is made
@@ -121,8 +127,9 @@ public class ProbSel extends ProbSessType {
             ExpressionInterval interval = b.getInterval();
             int newState = k + i + 1;
             ExpressionLiteral newStateVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(newState));
+            // mark this as a sending state
+            sendStates.add(new ExpressionBinaryOp(5, stateVar, newStateVal));
             Update update = new Update();
-            update.setParent(updates);
             UpdateElement updateElement = new UpdateElement(stateVar, newStateVal);
             update.addElement(updateElement);
             updates.addUpdate(interval, update);
@@ -130,25 +137,24 @@ public class ProbSel extends ProbSessType {
             Command c2 = new Command();
             ExpressionBinaryOp guard = new ExpressionBinaryOp(5, stateVar, newStateVal);
             c2.setGuard(guard);
-            c2.setSynch(parent + "!" + role + "_" + b.getLabel());
+            c2.setSynch(parent + "_" + role + "_" + b.getLabel());
             Updates updates2 = new Updates();
-            updates2.setParent(c2);
             Update update2 = new Update();
-            update2.setParent(updates2);
+            ExpressionLiteral stateAfterChoiceIVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(stateAfterChoiceI));
             if (!(b.getContinuation() instanceof RecVar)) {
-                // if continuation is end then set end to true
+                // if continuation is end then mark this as end state
                 if (b.getContinuation() instanceof TypeEnd) {
-                    UpdateElement updateElementEnd = new UpdateElement(endVar, trueVal);
-                    update2.addElement(updateElementEnd);
+                    endStates.add(new ExpressionBinaryOp(5, stateVar, stateAfterChoiceIVal));
                     finalState = stateAfterChoiceI;
                 } else {
                     // if continuation is not end or rec we need to project commands
-                    finalState = b.getContinuation().projectCommands(m, stateAfterChoiceI, r, stateVar, endVar, parent);
+                    finalState = b.getContinuation().projectCommands(m, stateAfterChoiceI, r, stateVar, parent, labelsEncoding, numLabels, sendStates, pendingStates, endStates);
                 }
             } else {
+                finalState = stateAfterChoiceI - 1;
                 stateAfterChoiceI = r;
             }
-            ExpressionLiteral stateAfterChoiceIVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(stateAfterChoiceI));
+            stateAfterChoiceIVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(stateAfterChoiceI));
             UpdateElement updateElementState2 = new UpdateElement(stateVar, stateAfterChoiceIVal);
             update2.addElement(updateElementState2);
             updates2.addUpdate(null, update2);

@@ -29,8 +29,9 @@ public class ProbSessTypeTest {
         InputStream str2 = new FileInputStream("./unit-tests/parser/TranslationRec.txt");
         mf1 = parser.parseTypeEnv(str1).toModulesFile();
         mf1.tidyUp();
-        System.out.println("Module Files generated: \n" + mf1.toString());
-        //mf2 = parser.parseTypeEnv(str2).toModulesFile();
+        //System.out.println("Module File 1 generated: \n" + mf1.toString());
+        mf2 = parser.parseTypeEnv(str2).toModulesFile();
+        System.out.println("Module Files 2 generated: \n" + mf2.toString());
     }
 
     @Test 
@@ -203,8 +204,8 @@ public class ProbSessTypeTest {
     }
 
     @Test
-    public void statesAndEnd() throws PrismTranslationException {
-        for (int i = 0; i < 2; i++) {
+    public void testSimple() {
+        for (int i = 0; i < 3; i++) {
             parser.ast.Module m = mf1.getModule(i);
             if (m.getName().equals("p")) {
                 assertEquals(m.getNumCommands(), 6);
@@ -268,6 +269,69 @@ public class ProbSessTypeTest {
                     }
                 }
             } else { fail(); }
+        }
+    }
+
+    @Test
+    public void testRec() {
+        for (int i = 0; i < 3; i++) {
+            parser.ast.Module m = mf2.getModule(i);
+            if (m.getName().equals("p")) {
+                assertEquals(m.getNumCommands(), 5);
+                for (int j = 0; j < 5; j++) {
+                    Command c = m.getCommand(j);
+                    Updates us = c.getUpdates();
+                    if (c.getSynch().equals("p!r_m2")) {
+                        assertEquals(us.getNumUpdates(), 1);
+                        Update u = us.getUpdate(0);
+                        assertEquals(u.getNumElements(), 2);
+                        for (int k = 0; k < 2; k++) {
+                            UpdateElement ue = u.getElement(k);
+                            if (ue.getVar().equals("end_p")) {
+                                ExpressionLiteral val = (ExpressionLiteral) ue.getExpression();
+                                assertEquals(val.getValue(), true);
+                            } else if (ue.getVar().equals("s_p")) {
+                                ExpressionLiteral val = (ExpressionLiteral) ue.getExpression();
+                                assertEquals(val.getValue(), 4);
+                            } else {
+                                fail();
+                            }
+                        }
+                    }
+                }
+            } else if (m.getName().equals("r")) {
+                assertEquals(m.getNumCommands(), 6);
+                for (int j = 0; j < 6; j++) {
+                    Command c = m.getCommand(j);
+                    Updates us = c.getUpdates();
+                    assertEquals(us.getNumUpdates(), 1);
+                    Update u = us.getUpdate(0);
+                    if (c.getSynch().equals("q!r_m6")) {
+                        assertEquals(u.getNumElements(), 1);
+                        UpdateElement ue = u.getElement(0);
+                        assertEquals(ue.getVar(), "s_r");
+//                        ExpressionLiteral val = (ExpressionLiteral) ue.getExpression();
+//                        assertEquals(c.getGuard().getOperand2().);
+                    }
+                }
+            } else if (m.getName().equals("q")) {
+                assertEquals(m.getNumCommands(), 9);
+                for (int j = 0; j < 9; j++) {
+                    Command c = m.getCommand(j);
+                    if (c.getSynch().equals("q!r_m6")) {
+                        Updates us = c.getUpdates();
+                        assertEquals(us.getNumUpdates(), 1);
+                        Update u = us.getUpdate(0);
+                        assertEquals(u.getNumElements(), 1);
+                        UpdateElement ue = u.getElement(0);
+                        assertEquals(ue.getVar(), "s_q");
+                        ExpressionLiteral val = (ExpressionLiteral) ue.getExpression();
+                        assertEquals(val.getValue(), 4);
+                    }
+                }
+            } else {
+                fail();
+            }
         }
     }
 }

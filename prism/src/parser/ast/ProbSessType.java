@@ -28,6 +28,8 @@ package parser.ast;
 
 import parser.ast.Module;
 import prism.PrismTranslationException;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 // Class representing Probabilistic Session Types 
 
@@ -36,8 +38,22 @@ public abstract class ProbSessType extends MessageType {
 
     public abstract int getNodes();
     public abstract String toString();
-    public abstract Module toModule(ExpressionIdent parentRole, ExpressionIdent endVar) throws PrismTranslationException;
-    public abstract int projectCommands(Module m, int currentState, int recState, ExpressionIdent parentRole, ExpressionIdent endVar, String parent) throws PrismTranslationException;
+    public abstract Module toModule(ExpressionIdent parentRole,
+                                    // ExpressionIdent endVar,
+                                    HashMap<String, Integer> labelsEncoding,
+                                    int numLabels,
+                                    ArrayList<ExpressionBinaryOp> sendStates,
+                                    ArrayList<ExpressionBinaryOp> pendingStates,
+                                    ArrayList<ExpressionBinaryOp> endStates)
+            throws PrismTranslationException;
+    public abstract int projectCommands(Module m, int currentState, int recState, ExpressionIdent parentRole,
+                                        //ExpressionIdent endVar,
+                                        String parent,
+                                        HashMap<String, Integer> labelsEncoding,
+                                        int numLabels,
+                                        ArrayList<ExpressionBinaryOp> sendStates,
+                                        ArrayList<ExpressionBinaryOp> pendingStates,
+                                        ArrayList<ExpressionBinaryOp> endStates) throws PrismTranslationException;
 }
 
 // ------------------------------------------------------------------------------

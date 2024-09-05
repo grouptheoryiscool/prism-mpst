@@ -6,6 +6,9 @@ import parser.visitor.DeepCopy;
 import prism.PrismLangException;
 import prism.PrismTranslationException;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 public class RecVar extends ProbSessType {
     protected String recvar;
 
@@ -25,12 +28,28 @@ public class RecVar extends ProbSessType {
         return 0;
     }
 
-    public Module toModule(ExpressionIdent parentRole, ExpressionIdent endVar) throws PrismTranslationException {
+    public Module toModule(
+            ExpressionIdent parentRole,
+            // ExpressionIdent endVar,
+            HashMap<String, Integer> labelsEncoding,
+            int numLabels,
+            ArrayList<ExpressionBinaryOp> sendStates,
+            ArrayList<ExpressionBinaryOp> pendingStates,
+            ArrayList<ExpressionBinaryOp> endStates) throws PrismTranslationException {
         // This should never be called.
         throw new PrismTranslationException("Invalid translation, RecVar cannot be translated to module");
     }
 
-    public int projectCommands(Module m, int k, int r, ExpressionIdent stateVar, ExpressionIdent endVar, String parent) throws PrismTranslationException {
+    public int projectCommands(Module m,
+                               int k,
+                               int r,
+                               ExpressionIdent stateVar,
+                               String parent,
+                               HashMap<String, Integer> labelsEncoding,
+                               int numLabels,
+                               ArrayList<ExpressionBinaryOp> sendStates,
+                               ArrayList<ExpressionBinaryOp> pendingStates,
+                               ArrayList<ExpressionBinaryOp> endStates) throws PrismTranslationException {
         // This should never be called.
         throw new PrismTranslationException("Invalid translation, RecVar cannot be translated to module");
     }

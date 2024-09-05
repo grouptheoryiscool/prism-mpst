@@ -28,6 +28,8 @@ package parser.ast;
 
 import java.nio.channels.Channel;
 import java.util.ArrayList;
+import java.util.HashMap;
+
 import parser.ast.Module;
 import parser.type.TypeBool;
 import parser.type.TypeInt;
@@ -75,23 +77,23 @@ public class Branching extends ProbSessType {
         return branches;
     }
 
-    public Module toModule(ExpressionIdent parentRole, ExpressionIdent endVar) throws PrismTranslationException{
+    public Module toModule(
+            ExpressionIdent parentRole,
+            HashMap<String, Integer> labelsEncoding,
+            int numLabels,
+            ArrayList<ExpressionBinaryOp> sendStates,
+            ArrayList<ExpressionBinaryOp> pendingStates,
+            ArrayList<ExpressionBinaryOp> endStates) throws PrismTranslationException {
         Module module = new Module(parentRole.getName());
         module.setNameASTElement(parentRole);
         String stateVarString = "s_" + parentRole.getName();
         ExpressionIdent stateVarIdent = new ExpressionIdent(stateVarString);
         // determine the last state of the module
-        int maxState = projectCommands(module, 0, -1, stateVarIdent, endVar, parentRole.getName());
+        int maxState = projectCommands(module, 0, -1, stateVarIdent, parentRole.getName(), labelsEncoding, numLabels, sendStates, pendingStates, endStates);
         ExpressionLiteral low = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(0));
         ExpressionLiteral high = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(maxState));
         DeclarationInt declType = new DeclarationInt(low, high); 
         module.addDeclaration(new Declaration(stateVarString, declType));
-        // add an end variable to the module
-        String endVarString = endVar.getName();
-        ExpressionLiteral falseVal = new ExpressionLiteral(TypeBool.getInstance(), Boolean.valueOf(false));
-        Declaration endDecl = new Declaration(endVarString, new DeclarationBool());
-        endDecl.setStart(falseVal);
-        module.addDeclaration(endDecl);
         return module;
     }
 
@@ -99,48 +101,66 @@ public class Branching extends ProbSessType {
         Module m, 
         int k, 
         int r, 
-        ExpressionIdent stateVar, 
-        ExpressionIdent endVar, 
-        String parent
-    ) throws PrismTranslationException {
-        ExpressionLiteral trueVal = new ExpressionLiteral(TypeBool.getInstance(), Boolean.valueOf(true));
-        ExpressionLiteral stateVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(k));
-        ExpressionBinaryOp stateEq = new ExpressionBinaryOp(5, stateVar, stateVal);
-        // add a single command for every message choice
-        int finalState = 0; // the max value s_p can take
-        int stateAfterChoiceI = k + 1;
-        for (int i = 0; i < branches.size(); i++) {
-            RecvBranch b = branches.get(i);
-            Command c = new Command();
-            c.setSynch(role + "!" + parent + "_" + b.getLabel());
-            c.setGuard(stateEq);
-            Updates updates = new Updates();
-            updates.setParent(c);
-            Update update = new Update();
-            update.setParent(updates);
-            if (!(b.getContinuation() instanceof RecVar)) {
-                // if continuation is end then set end to true
-                if (b.getContinuation() instanceof TypeEnd) {
-                    UpdateElement updateElementEnd = new UpdateElement(endVar, trueVal);
-                    update.addElement(updateElementEnd);
-                    finalState = stateAfterChoiceI;
+        ExpressionIdent stateVar,
+        String parent,
+        HashMap<String, Integer> labelsEncoding,
+        int numLabels,
+        ArrayList<ExpressionBinaryOp> sendStates,
+        ArrayList<ExpressionBinaryOp> pendingStates,
+        ArrayList<ExpressionBinaryOp> endStates) throws PrismTranslationException {
+            ExpressionLiteral stateVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(k));
+            ExpressionBinaryOp stateEq = new ExpressionBinaryOp(5, stateVar, stateVal);
+            // the first command that syncs with selection
+            Command c1 = new Command();
+            c1.setSynch(role + "_" + parent);
+            ExpressionLiteral stateValAfterSync = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(k+1));
+            ExpressionBinaryOp stateEqAfterSync = new ExpressionBinaryOp(5, stateVar, stateValAfterSync);
+            c1.setGuard(stateEq);
+            Updates updates1 = new Updates();
+            Update update1 = new Update();
+            UpdateElement updateElementState1 = new UpdateElement(stateVar, stateValAfterSync);
+            update1.addElement(updateElementState1);
+            updates1.addUpdate(null, update1);
+            c1.setUpdates(updates1);
+            m.addCommand(c1);
+            // mark this as a pending state
+            pendingStates.add(stateEqAfterSync);
+            // add a single command for every message choice
+            int finalState = 0; // the max value s_p can take
+            int stateAfterChoiceI = k + 2;
+            for (int i = 0; i < branches.size(); i++) {
+                RecvBranch b = branches.get(i);
+                Command c = new Command();
+                c.setSynch(role + "_" + parent + "_" + b.getLabel());
+                c.setGuard(stateEqAfterSync);
+                Updates updates = new Updates();
+                // updates.setParent(c);
+                Update update = new Update();
+                // update.setParent(updates);
+                ExpressionLiteral stateAfterChoiceIVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(stateAfterChoiceI));
+                if (!(b.getContinuation() instanceof RecVar)) {
+                    // if continuation is end then mark this as end state
+                    if (b.getContinuation() instanceof TypeEnd) {
+                        endStates.add(new ExpressionBinaryOp(5, stateVar, stateAfterChoiceIVal));
+                        finalState = stateAfterChoiceI;
+                    } else {
+                        // if continuation is not end or rec we need to project commands
+                        finalState = b.getContinuation().projectCommands(m, stateAfterChoiceI, r, stateVar, parent, labelsEncoding, numLabels, sendStates, pendingStates, endStates);
+                    }
                 } else {
-                    // if continuation is not end or rec we need to project commands
-                    finalState = b.getContinuation().projectCommands(m, stateAfterChoiceI, r, stateVar, endVar, parent);
+                    finalState = stateAfterChoiceI - 1;
+                    stateAfterChoiceI = r;
                 }
-            } else {
-                stateAfterChoiceI = r;
+                stateAfterChoiceIVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(stateAfterChoiceI));
+                UpdateElement updateElementState = new UpdateElement(stateVar, stateAfterChoiceIVal);
+                update.addElement(updateElementState);
+                updates.addUpdate(null, update);
+                c.setUpdates(updates);
+                m.addCommand(c);
+                // update node number for next branch
+                stateAfterChoiceI = finalState + 1;
             }
-            ExpressionLiteral stateAfterChoiceIVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(stateAfterChoiceI));
-            UpdateElement updateElementState = new UpdateElement(stateVar, stateAfterChoiceIVal);
-            update.addElement(updateElementState);
-            updates.addUpdate(null, update);
-            c.setUpdates(updates);
-            m.addCommand(c);
-            // update node number for next branch
-            stateAfterChoiceI = finalState + 1;
-        }
-        return finalState;
+            return finalState;
     }
 
     /* change all this */
