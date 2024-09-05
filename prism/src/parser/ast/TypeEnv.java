@@ -44,9 +44,9 @@ public class TypeEnv extends ASTElement {
         modulesFile.setModelType(ModelType.IMDP);
         HashMap<String, Integer> labelsEncoding = new HashMap<>();
         int numLabels = 0;
-        ArrayList<ExpressionBinaryOp> sendStates = new ArrayList<ExpressionBinaryOp>();
-        ArrayList<ExpressionBinaryOp> pendingStates = new ArrayList<ExpressionBinaryOp>();
-        ArrayList<ExpressionBinaryOp> endStates = new ArrayList<ExpressionBinaryOp>();
+        ArrayList<Expression> sendStates = new ArrayList<Expression>();
+        ArrayList<Expression> pendingStates = new ArrayList<Expression>();
+        ArrayList<Expression> endStates = new ArrayList<Expression>();
         for (Map.Entry<ChannelType, ProbSessType> entry : this.entries.entrySet()) {
             String role = entry.getKey().getRole();
             ExpressionIdent parentRole = new ExpressionIdent(role);
@@ -61,9 +61,9 @@ public class TypeEnv extends ASTElement {
         return modulesFile;
     }
 
-    public Expression createFormulaClause(
+    public static Expression createFormulaClause(
             Expression current,
-            ArrayList<ExpressionBinaryOp> states,
+            ArrayList<Expression> states,
             int op
             ) throws PrismTranslationException {
         if (states.size() == 0) {
@@ -72,16 +72,16 @@ public class TypeEnv extends ASTElement {
         if (current == null) {
             if (states.size() == 1) {
                 return states.get(0);
-            } else if (states.size() > 1) {
+            } else {
                 current = new ExpressionBinaryOp(op, states.get(0), states.get(1));
                 states.remove(0);
                 states.remove(0);
-                return this.createFormulaClause(current, states, op);
+                return createFormulaClause(current, states, op);
             }
         }
         ExpressionBinaryOp ret = new ExpressionBinaryOp(op, current, states.get(0));
         states.remove(0);
-        return this.createFormulaClause(ret, states, op);
+        return createFormulaClause(ret, states, op);
     }
 
     /* change all this */

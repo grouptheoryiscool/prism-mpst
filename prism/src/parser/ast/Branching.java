@@ -29,6 +29,7 @@ package parser.ast;
 import java.nio.channels.Channel;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import parser.ast.Module;
 import parser.type.TypeBool;
@@ -81,9 +82,9 @@ public class Branching extends ProbSessType {
             ExpressionIdent parentRole,
             HashMap<String, Integer> labelsEncoding,
             int numLabels,
-            ArrayList<ExpressionBinaryOp> sendStates,
-            ArrayList<ExpressionBinaryOp> pendingStates,
-            ArrayList<ExpressionBinaryOp> endStates) throws PrismTranslationException {
+            ArrayList<Expression> sendStates,
+            ArrayList<Expression> pendingStates,
+            ArrayList<Expression> endStates) throws PrismTranslationException {
         Module module = new Module(parentRole.getName());
         module.setNameASTElement(parentRole);
         String stateVarString = "s_" + parentRole.getName();
@@ -105,9 +106,9 @@ public class Branching extends ProbSessType {
         String parent,
         HashMap<String, Integer> labelsEncoding,
         int numLabels,
-        ArrayList<ExpressionBinaryOp> sendStates,
-        ArrayList<ExpressionBinaryOp> pendingStates,
-        ArrayList<ExpressionBinaryOp> endStates) throws PrismTranslationException {
+        ArrayList<Expression> sendStates,
+        ArrayList<Expression> pendingStates,
+        ArrayList<Expression> endStates) throws PrismTranslationException {
             ExpressionLiteral stateVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(k));
             ExpressionBinaryOp stateEq = new ExpressionBinaryOp(5, stateVar, stateVal);
             // the first command that syncs with selection
@@ -115,7 +116,10 @@ public class Branching extends ProbSessType {
             c1.setSynch(role + "_" + parent);
             ExpressionLiteral stateValAfterSync = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(k+1));
             ExpressionBinaryOp stateEqAfterSync = new ExpressionBinaryOp(5, stateVar, stateValAfterSync);
-            c1.setGuard(stateEq);
+            ArrayList<Expression> sendAndPending = new ArrayList<>(List.of(this.pendingFalse, this.sendFalse));
+            sendAndPending.add(stateEq);
+            Expression commGuard = TypeEnv.createFormulaClause(null, sendAndPending, 4);
+            c1.setGuard(commGuard);
             Updates updates1 = new Updates();
             Update update1 = new Update();
             UpdateElement updateElementState1 = new UpdateElement(stateVar, stateValAfterSync);

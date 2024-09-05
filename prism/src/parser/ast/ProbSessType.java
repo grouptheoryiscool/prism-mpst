@@ -34,7 +34,9 @@ import java.util.HashMap;
 // Class representing Probabilistic Session Types 
 
 public abstract class ProbSessType extends MessageType {
-    protected int nodes = -1; 
+    protected int nodes = -1;
+    public static final ExpressionUnaryOp sendFalse = new ExpressionUnaryOp(1, new ExpressionIdent("send"));
+    public static final ExpressionUnaryOp pendingFalse = new ExpressionUnaryOp(1, new ExpressionIdent("pending"));
 
     public abstract int getNodes();
     public abstract String toString();
@@ -42,18 +44,19 @@ public abstract class ProbSessType extends MessageType {
                                     // ExpressionIdent endVar,
                                     HashMap<String, Integer> labelsEncoding,
                                     int numLabels,
-                                    ArrayList<ExpressionBinaryOp> sendStates,
-                                    ArrayList<ExpressionBinaryOp> pendingStates,
-                                    ArrayList<ExpressionBinaryOp> endStates)
+                                    ArrayList<Expression> sendStates,
+                                    ArrayList<Expression> pendingStates,
+                                    ArrayList<Expression> endStates)
             throws PrismTranslationException;
     public abstract int projectCommands(Module m, int currentState, int recState, ExpressionIdent parentRole,
                                         //ExpressionIdent endVar,
                                         String parent,
                                         HashMap<String, Integer> labelsEncoding,
                                         int numLabels,
-                                        ArrayList<ExpressionBinaryOp> sendStates,
-                                        ArrayList<ExpressionBinaryOp> pendingStates,
-                                        ArrayList<ExpressionBinaryOp> endStates) throws PrismTranslationException;
+                                        ArrayList<Expression> sendStates,
+                                        ArrayList<Expression> pendingStates,
+                                        ArrayList<Expression> endStates) throws PrismTranslationException;
+
 }
 
 // ------------------------------------------------------------------------------

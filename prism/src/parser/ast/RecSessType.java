@@ -41,9 +41,9 @@ public class RecSessType extends ProbSessType {
             // ExpressionIdent endVar,
             HashMap<String, Integer> labelsEncoding,
             int numLabels,
-            ArrayList<ExpressionBinaryOp> sendStates,
-            ArrayList<ExpressionBinaryOp> pendingStates,
-            ArrayList<ExpressionBinaryOp> endStates) throws PrismTranslationException {
+            ArrayList<Expression> sendStates,
+            ArrayList<Expression> pendingStates,
+            ArrayList<Expression> endStates) throws PrismTranslationException {
         // set module name
         Module module = new Module(parentRole.getName());
         module.setNameASTElement(parentRole);
@@ -75,9 +75,9 @@ public class RecSessType extends ProbSessType {
         String parent,
         HashMap<String, Integer> labelsEncoding,
         int numLabels,
-        ArrayList<ExpressionBinaryOp> sendStates,
-        ArrayList<ExpressionBinaryOp> pendingStates,
-        ArrayList<ExpressionBinaryOp> endState
+        ArrayList<Expression> sendStates,
+        ArrayList<Expression> pendingStates,
+        ArrayList<Expression> endState
     ) throws PrismTranslationException {
         return this.body.projectCommands(m, k, k, stateVar, parent, labelsEncoding, numLabels, sendStates, pendingStates, endState);
     }

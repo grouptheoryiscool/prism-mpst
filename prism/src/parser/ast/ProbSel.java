@@ -28,6 +28,8 @@ package parser.ast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+
 import parser.ast.Module;
 import parser.type.TypeBool;
 import parser.type.TypeInt;
@@ -79,9 +81,9 @@ public class ProbSel extends ProbSessType {
             ExpressionIdent parentRole,
             HashMap<String, Integer> labelsEncoding,
             int numLabels,
-            ArrayList<ExpressionBinaryOp> sendStates,
-            ArrayList<ExpressionBinaryOp> pendingStates,
-            ArrayList<ExpressionBinaryOp> endStates
+            ArrayList<Expression> sendStates,
+            ArrayList<Expression> pendingStates,
+            ArrayList<Expression> endStates
     ) throws PrismTranslationException {
         // setting module name
         Module module = new Module(parentRole.getName());
@@ -106,15 +108,18 @@ public class ProbSel extends ProbSessType {
         String parent,
         HashMap<String, Integer> labelsEncoding,
         int numLabels,
-        ArrayList<ExpressionBinaryOp> sendStates,
-        ArrayList<ExpressionBinaryOp> pendingStates,
-        ArrayList<ExpressionBinaryOp> endStates
+        ArrayList<Expression> sendStates,
+        ArrayList<Expression> pendingStates,
+        ArrayList<Expression> endStates
     ) throws PrismTranslationException {
         // ExpressionLiteral trueVal = new ExpressionLiteral(TypeBool.getInstance(), Boolean.valueOf(true));
         Command c = new Command();
         ExpressionLiteral stateVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(k));
         ExpressionBinaryOp stateEq = new ExpressionBinaryOp(5, stateVar, stateVal);
-        c.setGuard(stateEq);
+        ArrayList<Expression> sendAndPending = new ArrayList<>(List.of(this.pendingFalse, this.sendFalse));
+        sendAndPending.add(stateEq);
+        Expression commGuard = TypeEnv.createFormulaClause(null, sendAndPending, 4);
+        c.setGuard(commGuard);
         c.setSynch(parent + "_" + role);
         //first step that chooses which branch to take
         Updates updates = new Updates();
