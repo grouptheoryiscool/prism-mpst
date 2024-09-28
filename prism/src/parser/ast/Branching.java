@@ -89,12 +89,27 @@ public class Branching extends ProbSessType {
         module.setNameASTElement(parentRole);
         String stateVarString = "s_" + parentRole.getName();
         ExpressionIdent stateVarIdent = new ExpressionIdent(stateVarString);
+        // creating msglabel variable
+        String messageLabelString = "m_" + parentRole.getName();
+        //ExpressionIdent msgLabIdent = new ExpressionIdent(messageLabelString);
+        // creating msgtype variable
+        String messageTypeString = "mtype_" + parentRole.getName();
+        //ExpressionIdent msgTyIdent = new ExpressionIdent(messageTypeString);
         // determine the last state of the module
         int maxState = projectCommands(module, 0, -1, stateVarIdent, parentRole.getName(), labelsEncoding, numLabels, sendStates, pendingStates, endStates);
         ExpressionLiteral low = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(0));
         ExpressionLiteral high = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(maxState));
         DeclarationInt declType = new DeclarationInt(low, high); 
         module.addDeclaration(new Declaration(stateVarString, declType));
+        // declaration for message label and message type vars
+        DeclarationInt declmsgLabel = new DeclarationInt(
+                new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(-1)),
+                new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(numLabels)));
+        DeclarationInt declmsgType = new DeclarationInt(
+                new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(1)),
+                new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(4)));
+        module.addDeclaration(new Declaration(messageLabelString, declmsgLabel));
+        module.addDeclaration(new Declaration(messageTypeString, declmsgType));
         return module;
     }
 
@@ -108,7 +123,14 @@ public class Branching extends ProbSessType {
         int numLabels,
         ArrayList<Expression> sendStates,
         ArrayList<Expression> pendingStates,
-        ArrayList<Expression> endStates) throws PrismTranslationException {
+        ArrayList<Expression> endStates
+        ) throws PrismTranslationException {
+            // creating msglabel variable
+            String messageLabelString = "m_" + role;
+            ExpressionIdent msgLab = new ExpressionIdent(messageLabelString);
+            // creating msgtype variable
+            String messageTypeString = "mtype_" + role;
+            ExpressionIdent msgTy = new ExpressionIdent(messageTypeString);
             ExpressionLiteral stateVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(k));
             ExpressionBinaryOp stateEq = new ExpressionBinaryOp(5, stateVar, stateVal);
             // the first command that syncs with selection
@@ -135,8 +157,23 @@ public class Branching extends ProbSessType {
             for (int i = 0; i < branches.size(); i++) {
                 RecvBranch b = branches.get(i);
                 Command c = new Command();
+                int labelNum = this.getLabelNum(b, labelsEncoding, numLabels);
+                ExpressionLiteral labelNumVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(labelNum));
+                Expression msglabguard = new ExpressionBinaryOp(5, msgLab, labelNumVal);
+                int msgTypeInt = 0 ;
+                MessageType msgType = b.getMsgType();
+                if (!(msgType instanceof BaseType)) {
+                    throw new PrismTranslationException("Unfortunately, our implementation does not support passing of channels yet. :(");
+                } else {
+                    BaseType basemsgtype = (BaseType) msgType;
+                    msgTypeInt = basemsgtype.toInt();
+                }
+                ExpressionLiteral msgTypeVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(msgTypeInt));
+                Expression msgTypeGuard = new ExpressionBinaryOp(5, msgTy, msgTypeVal);
+                ExpressionBinaryOp labType = new ExpressionBinaryOp(4, msgTypeGuard, msglabguard);
+                ExpressionBinaryOp guard = new ExpressionBinaryOp(4, labType, stateEqAfterSync);
                 c.setSynch(role + "_" + parent + "_" + b.getLabel());
-                c.setGuard(stateEqAfterSync);
+                c.setGuard(guard);
                 Updates updates = new Updates();
                 // updates.setParent(c);
                 Update update = new Update();

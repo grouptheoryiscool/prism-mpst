@@ -91,16 +91,31 @@ public class ProbSel extends ProbSessType {
         // creating state variable
         String stateVarString = "s_" + parentRole.getName();
         ExpressionIdent stateVarIdent = new ExpressionIdent(stateVarString);
+        // creating msglabel variable
+        String messageLabelString = "m_" + parentRole.getName();
+        //ExpressionIdent msgLabIdent = new ExpressionIdent(messageLabelString);
+        // creating msgtype variable
+        String messageTypeString = "mtype_" + parentRole.getName();
+        //ExpressionIdent msgTyIdent = new ExpressionIdent(messageTypeString);
         // determine the last state of the module
         int maxState = projectCommands(module, 0, -1, stateVarIdent, parentRole.getName(), labelsEncoding, numLabels, sendStates, pendingStates, endStates);
         ExpressionLiteral low = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(0));
         ExpressionLiteral high = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(maxState));
-        DeclarationInt declType = new DeclarationInt(low, high); 
+        DeclarationInt declType = new DeclarationInt(low, high);
+        // declaration for message label and message type vars
+        DeclarationInt declmsgLabel = new DeclarationInt(
+                new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(-1)),
+                new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(numLabels)));
+        DeclarationInt declmsgType = new DeclarationInt(
+                new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(1)),
+                new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(4)));
         module.addDeclaration(new Declaration(stateVarString, declType));
+        module.addDeclaration(new Declaration(messageLabelString, declmsgLabel));
+        module.addDeclaration(new Declaration(messageTypeString, declmsgType));
         return module;
     }
 
-    public int projectCommands(
+    public int projectCommands (
         Module m, 
         int k, 
         int r, 
@@ -112,6 +127,11 @@ public class ProbSel extends ProbSessType {
         ArrayList<Expression> pendingStates,
         ArrayList<Expression> endStates
     ) throws PrismTranslationException {
+        String messageLabelString = "m_" + parent;
+        ExpressionIdent msgLab = new ExpressionIdent(messageLabelString);
+        // creating msgtype variable
+        String messageTypeString = "mtype_" + parent;
+        ExpressionIdent msgTy = new ExpressionIdent(messageTypeString);
         // ExpressionLiteral trueVal = new ExpressionLiteral(TypeBool.getInstance(), Boolean.valueOf(true));
         Command c = new Command();
         ExpressionLiteral stateVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(k));
@@ -129,6 +149,17 @@ public class ProbSel extends ProbSessType {
         and for every choice, add a command that synchronizes with the choice */
         for (int i = 0; i < branches.size(); i++) {
             SelBranch b = branches.get(i);
+            int labelNum = this.getLabelNum(b, labelsEncoding, numLabels);
+            int msgTypeInt = 0 ;
+            MessageType msgType = b.getMsgType();
+            if (!(msgType instanceof BaseType)) {
+                throw new PrismTranslationException("Unfortunately, our implementation does not support passing of channels yet. :(");
+            } else {
+                BaseType basemsgtype = (BaseType) msgType;
+                msgTypeInt = basemsgtype.toInt();
+            }
+            ExpressionLiteral labelNumVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(labelNum));
+            ExpressionLiteral msgTypeNum = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(msgTypeInt));
             ExpressionInterval interval = b.getInterval();
             int newState = k + i + 1;
             ExpressionLiteral newStateVal = new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(newState));
@@ -136,7 +167,12 @@ public class ProbSel extends ProbSessType {
             sendStates.add(new ExpressionBinaryOp(5, stateVar, newStateVal));
             Update update = new Update();
             UpdateElement updateElement = new UpdateElement(stateVar, newStateVal);
+            // add the message label number and type
+            UpdateElement msgLabelUpdate = new UpdateElement(msgLab, labelNumVal);
+            UpdateElement msgTyUpdate = new UpdateElement(msgTy, msgTypeNum);
             update.addElement(updateElement);
+            update.addElement(msgLabelUpdate);
+            update.addElement(msgTyUpdate);
             updates.addUpdate(interval, update);
             // second step that synchronizes with recv branch
             Command c2 = new Command();

@@ -57,6 +57,28 @@ public abstract class ProbSessType extends MessageType {
                                         ArrayList<Expression> pendingStates,
                                         ArrayList<Expression> endStates) throws PrismTranslationException;
 
+    public int getLabelNum(SelBranch b, HashMap<String, Integer> labelsEncoding, int numLabels) {
+        String label = b.getLabel();
+        if (labelsEncoding.containsKey(label)) {
+            return labelsEncoding.get(label);
+        } else {
+            numLabels++;
+            labelsEncoding.put(label, numLabels);
+            return numLabels;
+        }
+    }
+
+    public int getLabelNum(RecvBranch b, HashMap<String, Integer> labelsEncoding, int numLabels) {
+        String label = b.getLabel();
+        if (labelsEncoding.containsKey(label)) {
+            return labelsEncoding.get(label);
+        } else {
+            numLabels++;
+            labelsEncoding.put(label, numLabels);
+            return numLabels;
+        }
+    }
+
 }
 
 // ------------------------------------------------------------------------------

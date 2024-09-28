@@ -225,17 +225,21 @@ public interface PrismParserConstants {
   /** RegularExpression Id. */
   int DOT = 107;
   /** RegularExpression Id. */
-  int REG_INT = 108;
+  int SAFE = 108;
   /** RegularExpression Id. */
-  int REG_DOUBLE = 109;
+  int DF = 109;
   /** RegularExpression Id. */
-  int REG_IDENTPRIME = 110;
+  int REG_INT = 110;
   /** RegularExpression Id. */
-  int REG_IDENT = 111;
+  int REG_DOUBLE = 111;
   /** RegularExpression Id. */
-  int PREPROC = 112;
+  int REG_IDENTPRIME = 112;
   /** RegularExpression Id. */
-  int LEXICAL_ERROR = 113;
+  int REG_IDENT = 113;
+  /** RegularExpression Id. */
+  int PREPROC = 114;
+  /** RegularExpression Id. */
+  int LEXICAL_ERROR = 115;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -350,6 +354,8 @@ public interface PrismParserConstants {
     "\"endtype\"",
     "\"nu\"",
     "\".\"",
+    "\"safe\"",
+    "\"DF\"",
     "<REG_INT>",
     "<REG_DOUBLE>",
     "<REG_IDENTPRIME>",

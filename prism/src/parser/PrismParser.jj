@@ -146,6 +146,9 @@ public class PrismParser
 			else if (args[0].equals("-sesstype") || args[0].equals("-st")) {
 				TypeEnv typeenv = p.parseTypeEnv(str);
 				System.out.println("PST: " + typeenv.toString());
+			}
+			else if (args[0].equals("-typeEnvProp") || args[0].equals("-tyProp")) {
+				MPSTproperties prop = p.parseMPSTproperties(str);
 			} else {
 				System.out.println("Unknown switch"); System.exit(1);
 			}
@@ -290,6 +293,25 @@ public class PrismParser
 		}
 
 		return pst;
+	}
+
+	// Parse Session Type Property
+
+	public MPSTproperties parseMPSTproperties(InputStream str) throws PrismLangException
+	{
+		MPSTproperties props = new MPSTproperties();
+
+		// (Re)start parser
+		ReInit(str);
+		// Parse
+		try {
+			mpstProperties(props);
+		}
+		catch (ParseException e) {
+			throw generateSyntaxError(e);
+		}
+
+		return props;
 	}
 	
 	//-----------------------------------------------------------------------------------
@@ -561,6 +583,8 @@ TOKEN :
 |	< TYPEEND: "endtype" >
 |	< MU: "nu" >
 |	< DOT: "." >
+|	< SAFE: "safe" >
+|	< DF: "DF" >
 	// Regular expressions
 |	< REG_INT:			(["1"-"9"](["0"-"9"])*)|("0") >
 |	< REG_DOUBLE:		(["0"-"9"])*(".")?(["0"-"9"])+(["e","E"](["-","+"])?(["0"-"9"])+)? >
@@ -2154,6 +2178,20 @@ TypeEnv typingEnv() :
 	<EOF>
 	{ return result; }
 }
+
+MPSTproperties mpstProperties(MPSTproperties props) :
+{
+	Token begin = null;
+	boolean safe = false;
+	boolean df = false;
+}
+{
+		{ begin = getToken(1); }
+		<SAFE> { props.setSafe(true); }
+		(<COMMA> <DF> { props.setDF(true); })* <EOF>
+		{ return props; }
+}
+
 
 // ProbSessType prob_sess_type() :
 // {

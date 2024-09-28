@@ -63,13 +63,7 @@ import param.ParamResult;
 import parser.PrismParser;
 import parser.State;
 import parser.Values;
-import parser.ast.Expression;
-import parser.ast.ForLoop;
-import parser.ast.LabelList;
-import parser.ast.ModulesFile;
-import parser.ast.PropertiesFile;
-import parser.ast.Property;
-import parser.ast.TypeEnv;
+import parser.ast.*;
 import prism.Accuracy.AccuracyLevel;
 import pta.DigitalClocks;
 import pta.PTAModelChecker;
@@ -1285,6 +1279,37 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		}
 
 		return typeEnv;
+	}
+
+	/**
+	 * Parse a Typing Env from a file.
+	 * @param file File to read in
+	 */
+	public MPSTproperties ParseMPSTProperties(File file) throws FileNotFoundException, PrismLangException
+	{
+		FileInputStream strMPSTprops;
+		PrismParser prismParser;
+		MPSTproperties prop = null;
+
+		// open file
+		strMPSTprops = new FileInputStream(file);
+
+		try {
+			// obtain exclusive access to the prism parser
+			// (don't forget to release it afterwards)
+			prismParser = getPrismParser();
+			try {
+				// parse file
+				prop = prismParser.parseMPSTproperties(strMPSTprops);
+			} finally {
+				// release prism parser
+				releasePrismParser();
+			}
+		} catch (InterruptedException ie) {
+			throw new PrismLangException("Concurrency error in parser");
+		}
+
+		return prop;
 	}
 
 	/**

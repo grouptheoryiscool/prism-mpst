@@ -49,6 +49,7 @@ import parser.ast.ExpressionReward;
 import parser.ast.ModulesFile;
 import parser.ast.TypeEnv;
 import parser.ast.PropertiesFile;
+import parser.ast.MPSTproperties;
 import parser.ast.Property;
 import strat.StrategyExportOptions;
 import prism.ResultsExporter.ResultsExportShape;
@@ -723,7 +724,13 @@ public class PrismCL implements PrismModelListener
 			// if properties file specified...
 			if (propertiesFilename != null) {
 				mainLog.print("\nParsing properties file \"" + propertiesFilename + "\"...\n");
-				propertiesFile = prism.parsePropertiesFile(new File(propertiesFilename));
+				if (sessionType) {
+					System.out.println("hi");
+					MPSTproperties prop = prism.ParseMPSTProperties(new File(propertiesFilename));
+					propertiesFile = prism.parsePropertiesString(prop.toPropertiesString());
+				} else {
+					propertiesFile = prism.parsePropertiesFile(new File(propertiesFilename));
+				}
 			}
 			// if properties were given on command line...
 			else if (!propertyString.equals("")) {

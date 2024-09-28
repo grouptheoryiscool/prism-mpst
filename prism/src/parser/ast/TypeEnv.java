@@ -8,6 +8,7 @@ import java.util.Map;
 import prism.ModelType;
 import prism.PrismTranslationException;
 import java.util.ArrayList;
+import java.util.List;
 
 import parser.ast.ExpressionIdent;
 
@@ -53,6 +54,11 @@ public class TypeEnv extends ASTElement {
             Module module = entry.getValue().toModule(parentRole, labelsEncoding, numLabels, sendStates, pendingStates, endStates);
             modulesFile.addModule(module);
         }
+        LabelList labels = new LabelList();
+        labels.addLabel(new ExpressionIdent("send"), createFormulaClause(null, sendStates, 3));
+        labels.addLabel(new ExpressionIdent("pending"), createFormulaClause(null, pendingStates, 3));
+        labels.addLabel(new ExpressionIdent("end"), createFormulaClause(null, endStates, 4));
+        modulesFile.setLabelList(labels);
         FormulaList formulas = new FormulaList();
         formulas.addFormula(new ExpressionIdent("send"), createFormulaClause(null, sendStates, 3));
         formulas.addFormula(new ExpressionIdent("pending"), createFormulaClause(null, pendingStates, 3));
@@ -74,14 +80,15 @@ public class TypeEnv extends ASTElement {
                 return states.get(0);
             } else {
                 current = new ExpressionBinaryOp(op, states.get(0), states.get(1));
-                states.remove(0);
-                states.remove(0);
-                return createFormulaClause(current, states, op);
+//                states.remove(0);
+//                states.remove(0);
+                ArrayList<Expression> newStates = new ArrayList<>(states.subList(2, states.size()));
+                return createFormulaClause(current, newStates, op);
             }
         }
         ExpressionBinaryOp ret = new ExpressionBinaryOp(op, current, states.get(0));
-        states.remove(0);
-        return createFormulaClause(ret, states, op);
+        ArrayList<Expression> newStates = new ArrayList<>(states.subList(1, states.size()));
+        return createFormulaClause(ret, newStates, op);
     }
 
     /* change all this */
