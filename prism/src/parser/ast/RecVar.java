@@ -32,10 +32,10 @@ public class RecVar extends ProbSessType {
             ExpressionIdent parentRole,
             // ExpressionIdent endVar,
             HashMap<String, Integer> labelsEncoding,
-            int numLabels,
+            int[] numLabels,
             ArrayList<Expression> sendStates,
             ArrayList<Expression> pendingStates,
-            ArrayList<Expression> endStates) throws PrismTranslationException {
+            HashMap<String, ArrayList<Expression>> endStates) throws PrismTranslationException {
         // This should never be called.
         throw new PrismTranslationException("Invalid translation, RecVar cannot be translated to module");
     }
@@ -46,10 +46,10 @@ public class RecVar extends ProbSessType {
                                ExpressionIdent stateVar,
                                String parent,
                                HashMap<String, Integer> labelsEncoding,
-                               int numLabels,
+                               int[] numLabels,
                                ArrayList<Expression> sendStates,
                                ArrayList<Expression> pendingStates,
-                               ArrayList<Expression> endStates) throws PrismTranslationException {
+                               HashMap<String, ArrayList<Expression>> endStates) throws PrismTranslationException {
         // This should never be called.
         throw new PrismTranslationException("Invalid translation, RecVar cannot be translated to module");
     }

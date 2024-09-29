@@ -1,0 +1,20 @@
+<component name="libraryTable">
+  <library name="lib2">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/prism/lib/lpsolve55j.jar!/" />
+      <root url="jar://$PROJECT_DIR$/prism/lib/jfreechart.jar!/" />
+      <root url="jar://$PROJECT_DIR$/prism/lib/log4j-api.jar!/" />
+      <root url="jar://$PROJECT_DIR$/prism/lib/nailgun-server.jar!/" />
+      <root url="jar://$PROJECT_DIR$/prism/lib/junit-platform-console-standalone.jar!/" />
+      <root url="jar://$PROJECT_DIR$/prism/lib/colt.jar!/" />
+      <root url="jar://$PROJECT_DIR$/prism/lib/jas.jar!/" />
+      <root url="jar://$PROJECT_DIR$/prism/lib/pepa.zip!/" />
+      <root url="jar://$PROJECT_DIR$/prism/lib/jcommon.jar!/" />
+      <root url="jar://$PROJECT_DIR$/prism/lib/jhoafparser.jar!/" />
+      <root url="jar://$PROJECT_DIR$/prism/lib/log4j-core.jar!/" />
+      <root url="jar://$PROJECT_DIR$/prism/lib/epsgraphics.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

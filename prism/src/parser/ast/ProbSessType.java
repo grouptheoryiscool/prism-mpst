@@ -43,39 +43,39 @@ public abstract class ProbSessType extends MessageType {
     public abstract Module toModule(ExpressionIdent parentRole,
                                     // ExpressionIdent endVar,
                                     HashMap<String, Integer> labelsEncoding,
-                                    int numLabels,
+                                    int[] numLabels,
                                     ArrayList<Expression> sendStates,
                                     ArrayList<Expression> pendingStates,
-                                    ArrayList<Expression> endStates)
+                                    HashMap<String, ArrayList<Expression>> endStates)
             throws PrismTranslationException;
     public abstract int projectCommands(Module m, int currentState, int recState, ExpressionIdent parentRole,
                                         //ExpressionIdent endVar,
                                         String parent,
                                         HashMap<String, Integer> labelsEncoding,
-                                        int numLabels,
+                                        int[] numLabels,
                                         ArrayList<Expression> sendStates,
                                         ArrayList<Expression> pendingStates,
-                                        ArrayList<Expression> endStates) throws PrismTranslationException;
+                                        HashMap<String, ArrayList<Expression>> endStates) throws PrismTranslationException;
 
-    public int getLabelNum(SelBranch b, HashMap<String, Integer> labelsEncoding, int numLabels) {
+    public int getLabelNum(SelBranch b, HashMap<String, Integer> labelsEncoding, int[] numLabels) {
         String label = b.getLabel();
         if (labelsEncoding.containsKey(label)) {
             return labelsEncoding.get(label);
         } else {
-            numLabels++;
-            labelsEncoding.put(label, numLabels);
-            return numLabels;
+            numLabels[0] = numLabels[0] + 1;
+            labelsEncoding.put(label, numLabels[0]);
+            return numLabels[0];
         }
     }
 
-    public int getLabelNum(RecvBranch b, HashMap<String, Integer> labelsEncoding, int numLabels) {
+    public int getLabelNum(RecvBranch b, HashMap<String, Integer> labelsEncoding, int[] numLabels) {
         String label = b.getLabel();
         if (labelsEncoding.containsKey(label)) {
             return labelsEncoding.get(label);
         } else {
-            numLabels++;
-            labelsEncoding.put(label, numLabels);
-            return numLabels;
+            numLabels[0] = numLabels[0] + 1;
+            labelsEncoding.put(label, numLabels[0]);
+            return numLabels[0];
         }
     }
 

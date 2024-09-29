@@ -44,10 +44,10 @@ public class TypeEnv extends ASTElement {
         ModulesFile modulesFile = new ModulesFile();
         modulesFile.setModelType(ModelType.IMDP);
         HashMap<String, Integer> labelsEncoding = new HashMap<>();
-        int numLabels = 0;
+        int[] numLabels = {0};
         ArrayList<Expression> sendStates = new ArrayList<Expression>();
         ArrayList<Expression> pendingStates = new ArrayList<Expression>();
-        ArrayList<Expression> endStates = new ArrayList<Expression>();
+        HashMap<String, ArrayList<Expression>> endStates = new HashMap<>();
         for (Map.Entry<ChannelType, ProbSessType> entry : this.entries.entrySet()) {
             String role = entry.getKey().getRole();
             ExpressionIdent parentRole = new ExpressionIdent(role);
@@ -57,12 +57,18 @@ public class TypeEnv extends ASTElement {
         LabelList labels = new LabelList();
         labels.addLabel(new ExpressionIdent("send"), createFormulaClause(null, sendStates, 3));
         labels.addLabel(new ExpressionIdent("pending"), createFormulaClause(null, pendingStates, 3));
-        labels.addLabel(new ExpressionIdent("end"), createFormulaClause(null, endStates, 4));
+        Expression endLabel = createFormulaClauseFromHashMap(endStates);
+        if (endLabel != null) {
+            labels.addLabel(new ExpressionIdent("end"), endLabel);
+        }
         modulesFile.setLabelList(labels);
         FormulaList formulas = new FormulaList();
         formulas.addFormula(new ExpressionIdent("send"), createFormulaClause(null, sendStates, 3));
         formulas.addFormula(new ExpressionIdent("pending"), createFormulaClause(null, pendingStates, 3));
-        formulas.addFormula(new ExpressionIdent("end"), createFormulaClause(null, endStates, 4));
+        Expression endFormula = createFormulaClauseFromHashMap(endStates);
+        if (endFormula != null) {
+            formulas.addFormula(new ExpressionIdent("end"), endFormula);
+        }
         modulesFile.setFormulaList(formulas);
         return modulesFile;
     }
@@ -89,6 +95,18 @@ public class TypeEnv extends ASTElement {
         ExpressionBinaryOp ret = new ExpressionBinaryOp(op, current, states.get(0));
         ArrayList<Expression> newStates = new ArrayList<>(states.subList(1, states.size()));
         return createFormulaClause(ret, newStates, op);
+    }
+
+
+    public static Expression createFormulaClauseFromHashMap(
+            HashMap<String, ArrayList<Expression>> states
+    ) throws PrismTranslationException {
+        ArrayList<Expression> exprToAnd = new ArrayList<>();
+        for (ArrayList<Expression> stateVars : states.values()) {
+            Expression stateEndVals = createFormulaClause(null, stateVars, ExpressionBinaryOp.OR);
+            exprToAnd.add(stateEndVals);
+        }
+        return createFormulaClause(null, exprToAnd, ExpressionBinaryOp.AND);
     }
 
     /* change all this */

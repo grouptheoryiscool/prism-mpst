@@ -1,0 +1,8 @@
+s[p]:nu x.(q&{
+    l1(int).endtype;
+    l2(bool).endtype
+    }),
+s[q]:nu y.(p+{
+    [0.5,0.5]: l1(int).y;
+    [0.5,0.5]: l2(bool).endtype
+    })

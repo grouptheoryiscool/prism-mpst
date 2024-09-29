@@ -40,16 +40,20 @@ public class RecSessType extends ProbSessType {
             ExpressionIdent parentRole,
             // ExpressionIdent endVar,
             HashMap<String, Integer> labelsEncoding,
-            int numLabels,
+            int[] numLabels,
             ArrayList<Expression> sendStates,
             ArrayList<Expression> pendingStates,
-            ArrayList<Expression> endStates) throws PrismTranslationException {
+            HashMap<String, ArrayList<Expression>> endStates) throws PrismTranslationException {
         // set module name
         Module module = new Module(parentRole.getName());
         module.setNameASTElement(parentRole);
         // set state variable for parent role
         String stateVarString = "s_" + parentRole.getName();
         ExpressionIdent stateVarIdent = new ExpressionIdent(stateVarString);
+        // creating msglabel variable
+        String messageLabelString = "m_" + parentRole.getName();
+        // creating msgtype variable
+        String messageTypeString = "mtype_" + parentRole.getName();
         // determine the last state of the module
         int maxState = projectCommands(module, 0, 0, stateVarIdent, parentRole.getName(), labelsEncoding,
                 numLabels, sendStates, pendingStates, endStates);
@@ -63,6 +67,14 @@ public class RecSessType extends ProbSessType {
 //        Declaration endDecl = new Declaration(endVarString, new DeclarationBool());
 //        endDecl.setStart(falseVal);
 //        module.addDeclaration(endDecl);
+        DeclarationInt declmsgLabel = new DeclarationInt(
+                new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(-1)),
+                new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(numLabels[0])));
+        DeclarationInt declmsgType = new DeclarationInt(
+                new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(1)),
+                new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(4)));
+        module.addDeclaration(new Declaration(messageLabelString, declmsgLabel));
+        module.addDeclaration(new Declaration(messageTypeString, declmsgType));
         return module;
     }
 
@@ -74,10 +86,10 @@ public class RecSessType extends ProbSessType {
         // ExpressionIdent endVar,
         String parent,
         HashMap<String, Integer> labelsEncoding,
-        int numLabels,
+        int[] numLabels,
         ArrayList<Expression> sendStates,
         ArrayList<Expression> pendingStates,
-        ArrayList<Expression> endState
+        HashMap<String, ArrayList<Expression>> endState
     ) throws PrismTranslationException {
         return this.body.projectCommands(m, k, k, stateVar, parent, labelsEncoding, numLabels, sendStates, pendingStates, endState);
     }

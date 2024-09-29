@@ -81,10 +81,10 @@ public class Branching extends ProbSessType {
     public Module toModule(
             ExpressionIdent parentRole,
             HashMap<String, Integer> labelsEncoding,
-            int numLabels,
+            int[] numLabels,
             ArrayList<Expression> sendStates,
             ArrayList<Expression> pendingStates,
-            ArrayList<Expression> endStates) throws PrismTranslationException {
+            HashMap<String, ArrayList<Expression>> endStates) throws PrismTranslationException {
         Module module = new Module(parentRole.getName());
         module.setNameASTElement(parentRole);
         String stateVarString = "s_" + parentRole.getName();
@@ -104,7 +104,7 @@ public class Branching extends ProbSessType {
         // declaration for message label and message type vars
         DeclarationInt declmsgLabel = new DeclarationInt(
                 new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(-1)),
-                new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(numLabels)));
+                new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(numLabels[0])));
         DeclarationInt declmsgType = new DeclarationInt(
                 new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(1)),
                 new ExpressionLiteral(TypeInt.getInstance(), Integer.valueOf(4)));
@@ -120,10 +120,10 @@ public class Branching extends ProbSessType {
         ExpressionIdent stateVar,
         String parent,
         HashMap<String, Integer> labelsEncoding,
-        int numLabels,
+        int[] numLabels,
         ArrayList<Expression> sendStates,
         ArrayList<Expression> pendingStates,
-        ArrayList<Expression> endStates
+        HashMap<String, ArrayList<Expression>> endStates
         ) throws PrismTranslationException {
             // creating msglabel variable
             String messageLabelString = "m_" + role;
@@ -182,7 +182,11 @@ public class Branching extends ProbSessType {
                 if (!(b.getContinuation() instanceof RecVar)) {
                     // if continuation is end then mark this as end state
                     if (b.getContinuation() instanceof TypeEnd) {
-                        endStates.add(new ExpressionBinaryOp(5, stateVar, stateAfterChoiceIVal));
+                        ArrayList<Expression> endStatesList;
+                        if (endStates.containsKey(parent)) {
+                            endStatesList = endStates.get(parent);
+                        } else { endStatesList = new ArrayList<>(); endStates.put(parent, endStatesList);}
+                        endStatesList.add(new ExpressionBinaryOp(5, stateVar, stateAfterChoiceIVal));
                         finalState = stateAfterChoiceI;
                     } else {
                         // if continuation is not end or rec we need to project commands

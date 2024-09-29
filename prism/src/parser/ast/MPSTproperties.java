@@ -16,11 +16,11 @@ public class MPSTproperties {
     public String toPropertiesString() {
         String s = "";
         if (this.safe) {
-            s += "Pminmin=?[F \"deadlock\" & !\"send\" & \"pending\"]";
+            s += "P<=0[F \"deadlock\" & \"pending\"]";
             if (this.df) { s += "; "; }
         }
         if (this.df) {
-            s += "Pmaxmax=?[F \"deadlock\" & !\"send\" & !\"pending\" & !\"end\"]";
+            s += "P<=0[F \"deadlock\" & !\"end\"]";
         }
         System.out.println(s);
         return s;

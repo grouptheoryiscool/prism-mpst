@@ -1,0 +1,11 @@
+s[p]:q+{[0.3,0.5]:l1(
+        r+{
+            [0.3,0.5]:m(int).endtype; 
+            [0.5,0.7]:m(bool).endtype
+        }).endtype;
+    [0.5,0.7]:l2(
+        r&{
+            m1(bool).endtype; 
+            m2(int).endtype
+        }).endtype
+    }

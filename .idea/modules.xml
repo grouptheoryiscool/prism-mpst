@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/prism/ext/lp_solve_5.5_java/lp_solve_5.5_java.iml" filepath="$PROJECT_DIR$/prism/ext/lp_solve_5.5_java/lp_solve_5.5_java.iml" />
+      <module fileurl="file://$PROJECT_DIR$/prism/ext/lp_solve_5.5_java/src/lp_solve_5.5_java2.iml" filepath="$PROJECT_DIR$/prism/ext/lp_solve_5.5_java/src/lp_solve_5.5_java2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/prism/prism.iml" filepath="$PROJECT_DIR$/prism/prism.iml" />
+      <module fileurl="file://$PROJECT_DIR$/prism/unit-tests/unit-tests.iml" filepath="$PROJECT_DIR$/prism/unit-tests/unit-tests.iml" />
+    </modules>
+  </component>
+</project>
