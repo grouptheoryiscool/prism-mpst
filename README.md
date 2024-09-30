@@ -2,8 +2,25 @@
 
 This is PRISM (Probabilistic Symbolic Model Checker).
 
+## MSc Thesis: Instructions for PMPTs
 
-## Installation
+The installation for PRISM remains the same, see [installation section](installation).
+
+To run, we use the flag -mpst and the command:
+
+`./bin/prism -mpst <path-to-typing-context-file> <path-to-properties-file>`
+
+The typing context file contains a typing context in the form of comma separated entries.
+Each entry is of the form s\[p\]:T, where T is a session type. 
++, & and 'nu' are the selection, branching and recursion operators respectively. 
+
+As for the properties file, it consists of comma separated properties you want to check. 
+We only support safety and deadlock freedom for now, so use 'SAFE' for safety and 'DF' for deadlock-freedom.
+
+Examples of typing contexts and a properties files can be found in the [/pmpst](/pmpst) directory.
+
+
+## Installation <a id='installation'></a>
 
 For detailed installation instructions, check the online manual at:
 
