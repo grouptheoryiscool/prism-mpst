@@ -17,7 +17,7 @@ Each entry is of the form s\[p\]:T, where T is a session type.
 As for the properties file, it consists of comma separated properties you want to check. 
 We only support safety and deadlock freedom for now, so use 'SAFE' for safety and 'DF' for deadlock-freedom.
 
-Examples of typing contexts and a properties files can be found in the [/pmpst](/pmpst) directory.
+Examples of typing contexts and a properties files can be found in the [/prism/pmpst](/prism/pmpst) directory.
 
 
 ## Installation <a id='installation'></a>
